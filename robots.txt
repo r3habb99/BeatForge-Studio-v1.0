@@ -1,0 +1,22 @@
+# BeatForge Studio - Robots.txt
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Disallow crawling of JavaScript source files (optional)
+# Uncomment if you don't want search engines indexing your JS files
+# Disallow: /js/
+
+# Disallow crawling of CSS files (optional)
+# Disallow: /css/
+
+# Allow crawling of images
+Allow: /img/
+
+# Sitemap location
+Sitemap: https://yourdomain.com/sitemap.xml
+
+# Crawl-delay (optional, in seconds)
+# Crawl-delay: 1
+
