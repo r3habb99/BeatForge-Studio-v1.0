@@ -3,6 +3,8 @@
  * Handles hamburger menu functionality for mobile devices
  */
 
+import { THEMES } from "../constants/themes.js";
+
 /**
  * Initialize mobile menu
  */
@@ -127,73 +129,12 @@ function setupMobileMenuEventListeners() {
   // Recording controls sync
   syncRecordingControls();
 
-  // Theme button - toggle theme menu
+  // Theme button - show mobile theme selector
   const themeBtnMobile = document.getElementById("themeBtnMobile");
-  const themeBtn = document.getElementById("themeBtn");
-  const themeMenu = document.getElementById("themeMenu");
-
-  if (themeBtnMobile && themeBtn && themeMenu) {
+  if (themeBtnMobile) {
     themeBtnMobile.addEventListener("click", (e) => {
       e.stopPropagation();
-
-      const isHidden = themeMenu.classList.contains("hidden");
-
-      // Toggle theme menu visibility
-      themeMenu.classList.toggle("hidden");
-
-      if (isHidden) {
-        // Opening the menu - position it relative to the mobile button
-        const rect = themeBtnMobile.getBoundingClientRect();
-        themeMenu.style.position = "fixed";
-        themeMenu.style.left = `${rect.left}px`;
-        themeMenu.style.top = `${rect.bottom + 5}px`;
-        themeMenu.style.right = "auto";
-        themeMenu.style.zIndex = "1001"; // Above mobile menu and backdrop
-      } else {
-        // Closing the menu - reset styles
-        themeMenu.style.position = "";
-        themeMenu.style.left = "";
-        themeMenu.style.top = "";
-        themeMenu.style.right = "";
-        themeMenu.style.zIndex = "";
-      }
-    });
-
-    // Close theme menu when clicking outside
-    document.addEventListener("click", (e) => {
-      if (
-        !themeMenu.contains(e.target) &&
-        e.target !== themeBtnMobile &&
-        !themeMenu.classList.contains("hidden")
-      ) {
-        themeMenu.classList.add("hidden");
-        // Reset styles
-        themeMenu.style.position = "";
-        themeMenu.style.left = "";
-        themeMenu.style.top = "";
-        themeMenu.style.right = "";
-        themeMenu.style.zIndex = "";
-      }
-    });
-
-    // Close mobile menu when theme is selected
-    const themeOptions = themeMenu.querySelectorAll(".theme-option");
-    themeOptions.forEach((option) => {
-      option.addEventListener("click", () => {
-        // Hide theme menu immediately
-        themeMenu.classList.add("hidden");
-        // Reset styles
-        themeMenu.style.position = "";
-        themeMenu.style.left = "";
-        themeMenu.style.top = "";
-        themeMenu.style.right = "";
-        themeMenu.style.zIndex = "";
-
-        // Close mobile menu after a small delay to see the theme change
-        setTimeout(() => {
-          closeMobileMenu();
-        }, 300);
-      });
+      showMobileThemeSelector();
     });
   }
 
@@ -229,6 +170,93 @@ function setupMobileMenuEventListeners() {
       }
     });
   }
+}
+
+/**
+ * Show mobile theme selector
+ */
+function showMobileThemeSelector() {
+  // Create theme selector modal
+  const modal = document.createElement("div");
+  modal.id = "mobileThemeModal";
+  modal.className =
+    "fixed inset-0 z-[1002] flex items-center justify-center p-4";
+  modal.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+
+  const content = `
+    <div class="bg-gray-900 rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold text-white">Select Theme</h3>
+        <button id="closeMobileThemeModal" class="text-gray-400 hover:text-white text-2xl leading-none">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        ${THEMES.map(
+          (theme) => `
+          <button class="mobile-theme-option p-4 bg-gray-800 hover:bg-gray-700 rounded-lg transition-all" data-theme="${
+            theme.value
+          }">
+            <div class="flex gap-1 mb-2">
+              ${theme.colors
+                .map(
+                  (color) =>
+                    `<div class="w-8 h-8 rounded" style="background-color: ${color}"></div>`
+                )
+                .join("")}
+            </div>
+            <div class="text-white text-sm font-medium">${theme.name}</div>
+          </button>
+        `
+        ).join("")}
+      </div>
+    </div>
+  `;
+
+  modal.innerHTML = content;
+  document.body.appendChild(modal);
+
+  // Close modal on backdrop click
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) {
+      modal.remove();
+    }
+  });
+
+  // Close button
+  const closeBtn = modal.querySelector("#closeMobileThemeModal");
+  closeBtn.addEventListener("click", () => {
+    modal.remove();
+  });
+
+  // Theme selection
+  const themeOptions = modal.querySelectorAll(".mobile-theme-option");
+  themeOptions.forEach((option) => {
+    option.addEventListener("click", () => {
+      const themeName = option.dataset.theme;
+
+      // Apply theme using the global setTheme function
+      if (window.setTheme) {
+        window.setTheme(themeName);
+      }
+
+      // Show toast notification
+      if (window.toast) {
+        window.toast.success(
+          "Theme Changed",
+          `Applied ${option.querySelector(".text-white").textContent} theme`
+        );
+      }
+
+      // Close modal
+      modal.remove();
+
+      // Close mobile menu after a small delay
+      setTimeout(() => {
+        closeMobileMenu();
+      }, 300);
+    });
+  });
 }
 
 /**
