@@ -300,6 +300,9 @@ function renderDesktopTracks(
       cell.className = `grid-col border-r border-b border-gray-800 flex items-center justify-center relative transition-colors`;
       if (i % 4 === 0) cell.classList.add("border-l", "border-l-gray-700");
 
+      // Add step number data attribute
+      cell.dataset.stepNumber = i + 1;
+
       if (track.type === "drum") {
         let btn = cell.querySelector(".step-btn");
         if (!btn) {
@@ -318,12 +321,26 @@ function renderDesktopTracks(
         btn.className = `step-btn w-10 h-10 md:w-12 md:h-12 rounded-sm transition-all ${
           track.steps[i] ? track.color : "bg-gray-800"
         }`;
+
+        // Add step number label
+        let stepLabel = btn.querySelector(".step-number");
+        if (!stepLabel) {
+          stepLabel = document.createElement("span");
+          stepLabel.className = "step-number";
+          stepLabel.textContent = i + 1;
+          btn.appendChild(stepLabel);
+        }
       } else {
         const notesHere = track.notes.filter((n) => n.step === i);
         if (notesHere.length > 0) {
-          cell.innerHTML = `<div class="${track.color} w-full h-5 md:h-6 rounded-sm text-[9px] md:text-[10px] flex items-center justify-center text-white font-bold shadow-lg opacity-90">${notesHere[0].note}</div>`;
+          cell.innerHTML = `<div class="${
+            track.color
+          } w-full h-5 md:h-6 rounded-sm text-[9px] md:text-[10px] flex items-center justify-center text-white font-bold shadow-lg opacity-90 relative">
+            <span class="step-number step-number-with-note">${i + 1}</span>
+            <span class="note-text">${notesHere[0].note}</span>
+          </div>`;
         } else {
-          cell.innerHTML = "";
+          cell.innerHTML = `<span class="step-number">${i + 1}</span>`;
         }
         cell.onclick = (e) => {
           e.stopPropagation(); // Prevent row click
@@ -387,15 +404,29 @@ function renderMobileTracks(tracks, headerContainer, openPianoRollCallback) {
       }`;
       stepBtn.dataset.trackId = track.id;
       stepBtn.dataset.step = i;
+      stepBtn.dataset.stepNumber = i + 1;
       stepBtn.setAttribute("aria-label", `Step ${i + 1}`);
 
+      // For synth tracks, check if there are notes
+      const notesHere =
+        track.type === "synth" ? track.notes.filter((n) => n.step === i) : [];
+      const hasNote = notesHere.length > 0;
+
+      // Add step number label
+      const stepLabel = document.createElement("span");
+      stepLabel.className = hasNote
+        ? "step-number step-number-with-note"
+        : "step-number";
+      stepLabel.textContent = i + 1;
+      stepBtn.appendChild(stepLabel);
+
       // For synth tracks, show note indicator
-      if (track.type === "synth") {
-        const notesHere = track.notes.filter((n) => n.step === i);
-        if (notesHere.length > 0) {
-          stepBtn.classList.add(track.color);
-          stepBtn.innerHTML = `<span class="mobile-note-indicator">${notesHere[0].note}</span>`;
-        }
+      if (track.type === "synth" && hasNote) {
+        stepBtn.classList.add(track.color);
+        const noteIndicator = document.createElement("span");
+        noteIndicator.className = "mobile-note-indicator";
+        noteIndicator.textContent = notesHere[0].note;
+        stepBtn.appendChild(noteIndicator);
       }
 
       sequencerSection.appendChild(stepBtn);
