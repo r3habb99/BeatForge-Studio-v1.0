@@ -167,6 +167,7 @@ function handleStopRecordButton() {
  * Setup all recording controls
  */
 export function setupRecordingControls() {
+  // Desktop recording controls
   document
     .getElementById("recordBtn")
     .addEventListener("click", handleRecordButton);
@@ -176,4 +177,19 @@ export function setupRecordingControls() {
   document
     .getElementById("stopRecordBtn")
     .addEventListener("click", handleStopRecordButton);
+
+  // Mobile recording controls
+  const recordBtnMobile = document.getElementById("recordBtnMobile");
+  const pauseBtnMobile = document.getElementById("pauseRecordBtnMobile");
+  const stopBtnMobile = document.getElementById("stopRecordBtnMobile");
+
+  if (recordBtnMobile) {
+    recordBtnMobile.addEventListener("click", handleRecordButton);
+  }
+  if (pauseBtnMobile) {
+    pauseBtnMobile.addEventListener("click", handlePauseRecordButton);
+  }
+  if (stopBtnMobile) {
+    stopBtnMobile.addEventListener("click", handleStopRecordButton);
+  }
 }

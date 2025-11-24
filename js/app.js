@@ -18,7 +18,7 @@ import {
   clearState,
 } from "./state/stateManager.js";
 import { startScheduler } from "./scheduler/scheduler.js";
-import { drawVisualizer } from "./ui/visualizer.js";
+import { drawVisualizer, initVisualizerMode } from "./ui/visualizer.js";
 import { updatePatternSelector } from "./ui/patternManager.js";
 import { renderTracksUI } from "./ui/trackRenderer.js";
 import { openPianoRoll, closePianoRoll } from "./ui/pianoRoll.js";
@@ -36,6 +36,7 @@ import { initTheme } from "./utils/theme.js";
 import { initTooltips } from "./utils/tooltip.js";
 import { initShortcutsOverlay } from "./utils/shortcutsOverlay.js";
 import { initTrackColors } from "./utils/trackColors.js";
+import { initActionsMenu } from "./ui/actionsMenu.js";
 
 /**
  * Initialize audio and UI
@@ -182,6 +183,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initShortcutsOverlay();
     initTrackColors();
     initMobileMenu();
+    initActionsMenu();
+    initVisualizerMode();
     console.log("✅ UI enhancements initialized");
   } catch (error) {
     console.error("❌ UI enhancements initialization failed:", error);

@@ -77,7 +77,7 @@
                 <canvas id="visualizer" width="320" height="80" aria-label="Audio visualizer"
                     class="visualizer"></canvas>
                 <button id="visualizerModeBtn" aria-label="Change visualizer mode" class="visualizer-mode-btn">
-                    <i class="fas fa-wave-square"></i>
+                    <i class="fas fa-chart-bar"></i>
                 </button>
             </div>
 
@@ -108,77 +108,89 @@
                 </select>
             </div>
 
-            <!-- Action Buttons Group -->
+            <!-- Action Buttons Group - Dropdown Menu -->
             <div class="action-buttons-group hidden md:flex">
-                <!-- Export Button -->
-                <button id="exportBtn" onclick="exportProject()" aria-label="Export Recording"
-                    data-tooltip="Download your recording" disabled
-                    class="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fas fa-download mr-1"></i>
-                    <span>Export</span>
-                </button>
-
-                <!-- Clear All Button -->
-                <button id="clearBtn" onclick="clearAllData()" aria-label="Clear all notes and reset"
-                    data-tooltip="Clear all tracks and reset" data-tooltip-shortcut="Ctrl+Del"
-                    class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-400">
-                    <i class="fas fa-trash mr-1"></i>
-                    <span>Clear All</span>
-                </button>
-
-                <!-- Theme Switcher -->
                 <div class="relative">
-                    <button id="themeBtn" aria-label="Change theme"
+                    <button id="actionsMenuBtn" aria-label="Actions menu"
                         class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-400">
-                        <i class="fas fa-palette mr-1"></i>
-                        <span>Theme</span>
+                        <i class="fas fa-ellipsis-v mr-1"></i>
+                        <span>Actions</span>
+                        <i class="fas fa-chevron-down ml-1 text-xs"></i>
                     </button>
-                    <div id="themeMenu" class="theme-menu hidden">
-                        <button data-theme="dark" class="theme-option active">
-                            <span class="theme-preview"
-                                style="background: linear-gradient(135deg, #121212, #1e1e1e)"></span>
-                            <span>Dark</span>
-                            <i class="fas fa-check theme-check"></i>
+                    <div id="actionsMenu" class="actions-menu hidden">
+                        <!-- Initialize Audio -->
+                        <button id="initAudioBtn" aria-label="Initialize audio engine"
+                            class="actions-menu-item btn-init">
+                            <i class="fas fa-play-circle mr-2"></i>
+                            <span>Initialize Audio</span>
                         </button>
-                        <button data-theme="darker" class="theme-option">
-                            <span class="theme-preview"
-                                style="background: linear-gradient(135deg, #0a0a0a, #141414)"></span>
-                            <span>Darker</span>
-                            <i class="fas fa-check theme-check"></i>
+
+                        <div class="actions-menu-divider"></div>
+
+                        <!-- Export -->
+                        <button id="exportBtn" onclick="exportProject()" aria-label="Export Recording" disabled
+                            class="actions-menu-item">
+                            <i class="fas fa-download mr-2"></i>
+                            <span>Export Recording</span>
                         </button>
-                        <button data-theme="cyberpunk" class="theme-option">
-                            <span class="theme-preview"
-                                style="background: linear-gradient(135deg, #0d0221, #ff006e)"></span>
-                            <span>Cyberpunk</span>
-                            <i class="fas fa-check theme-check"></i>
+
+                        <!-- Clear All -->
+                        <button id="clearBtn" onclick="clearAllData()" aria-label="Clear all notes and reset"
+                            class="actions-menu-item">
+                            <i class="fas fa-trash mr-2"></i>
+                            <span>Clear All</span>
                         </button>
-                        <button data-theme="neon" class="theme-option">
-                            <span class="theme-preview"
-                                style="background: linear-gradient(135deg, #0a0e27, #00f5ff)"></span>
-                            <span>Neon</span>
-                            <i class="fas fa-check theme-check"></i>
+
+                        <!-- Keyboard Shortcuts -->
+                        <button id="showShortcutsBtnMenu" aria-label="Show keyboard shortcuts"
+                            class="actions-menu-item">
+                            <i class="fas fa-keyboard mr-2"></i>
+                            <span>Keyboard Shortcuts</span>
                         </button>
-                        <button data-theme="ocean" class="theme-option">
-                            <span class="theme-preview"
-                                style="background: linear-gradient(135deg, #001f3f, #00d9ff)"></span>
-                            <span>Ocean</span>
-                            <i class="fas fa-check theme-check"></i>
-                        </button>
-                        <button data-theme="sunset" class="theme-option">
-                            <span class="theme-preview"
-                                style="background: linear-gradient(135deg, #1a0f0f, #ff6b35)"></span>
-                            <span>Sunset</span>
-                            <i class="fas fa-check theme-check"></i>
-                        </button>
+
+                        <div class="actions-menu-divider"></div>
+
+                        <!-- Theme Submenu -->
+                        <div class="actions-menu-section">
+                            <div class="actions-menu-section-title">
+                                <i class="fas fa-palette mr-2"></i>
+                                <span>Theme</span>
+                            </div>
+                            <div class="theme-options-grid">
+                                <button data-theme="dark" class="theme-option-compact active">
+                                    <span class="theme-preview-compact"
+                                        style="background: linear-gradient(135deg, #121212, #1e1e1e)"></span>
+                                    <span class="theme-name-compact">Dark</span>
+                                </button>
+                                <button data-theme="darker" class="theme-option-compact">
+                                    <span class="theme-preview-compact"
+                                        style="background: linear-gradient(135deg, #0a0a0a, #141414)"></span>
+                                    <span class="theme-name-compact">Darker</span>
+                                </button>
+                                <button data-theme="cyberpunk" class="theme-option-compact">
+                                    <span class="theme-preview-compact"
+                                        style="background: linear-gradient(135deg, #0d0221, #ff006e)"></span>
+                                    <span class="theme-name-compact">Cyber</span>
+                                </button>
+                                <button data-theme="neon" class="theme-option-compact">
+                                    <span class="theme-preview-compact"
+                                        style="background: linear-gradient(135deg, #0a0e27, #00f5ff)"></span>
+                                    <span class="theme-name-compact">Neon</span>
+                                </button>
+                                <button data-theme="ocean" class="theme-option-compact">
+                                    <span class="theme-preview-compact"
+                                        style="background: linear-gradient(135deg, #001f3f, #00d9ff)"></span>
+                                    <span class="theme-name-compact">Ocean</span>
+                                </button>
+                                <button data-theme="sunset" class="theme-option-compact">
+                                    <span class="theme-preview-compact"
+                                        style="background: linear-gradient(135deg, #1a0f0f, #ff6b35)"></span>
+                                    <span class="theme-name-compact">Sunset</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Initialize Button -->
-                <button id="initAudioBtn" aria-label="Initialize audio engine"
-                    class="btn-init px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs md:text-sm font-bold animate-pulse focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    <span class="hidden md:inline">Initialize Audio</span>
-                    <span class="md:hidden">Init</span>
-                </button>
             </div>
     </header>
 
@@ -338,9 +350,9 @@
         <div class="info-section">
             <div class="text-center">
                 <p class="text-xs md:text-sm font-bold">BeatForge Studio v1.0</p>
-                <p class="text-[10px] md:text-xs mt-1 hidden sm:block">Web Audio API • LocalStorage • Tailwind</p>
+                <p class="text-[10px] md:text-xs mt-1 hidden sm:block">Web Audio API • LocalStorage</p>
                 <button id="showShortcutsBtn" aria-label="Show keyboard shortcuts"
-                    class="mt-1 md:mt-2 text-[10px] md:text-xs text-blue-400 hover:text-blue-300 underline focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="mt-1 md:mt-2 text-[10px] md:text-xs text-blue-400 hover:text-blue-300 underline focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden">
                     Shortcuts (?)
                 </button>
             </div>

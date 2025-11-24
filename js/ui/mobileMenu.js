@@ -135,24 +135,64 @@ function setupMobileMenuEventListeners() {
   if (themeBtnMobile && themeBtn && themeMenu) {
     themeBtnMobile.addEventListener("click", (e) => {
       e.stopPropagation();
+
+      const isHidden = themeMenu.classList.contains("hidden");
+
       // Toggle theme menu visibility
       themeMenu.classList.toggle("hidden");
 
-      // Position theme menu inside mobile menu
-      const rect = themeBtnMobile.getBoundingClientRect();
-      themeMenu.style.position = "fixed";
-      themeMenu.style.left = `${rect.left}px`;
-      themeMenu.style.top = `${rect.bottom + 5}px`;
-      themeMenu.style.zIndex = "1001"; // Above mobile menu
+      if (isHidden) {
+        // Opening the menu - position it relative to the mobile button
+        const rect = themeBtnMobile.getBoundingClientRect();
+        themeMenu.style.position = "fixed";
+        themeMenu.style.left = `${rect.left}px`;
+        themeMenu.style.top = `${rect.bottom + 5}px`;
+        themeMenu.style.right = "auto";
+        themeMenu.style.zIndex = "1001"; // Above mobile menu and backdrop
+      } else {
+        // Closing the menu - reset styles
+        themeMenu.style.position = "";
+        themeMenu.style.left = "";
+        themeMenu.style.top = "";
+        themeMenu.style.right = "";
+        themeMenu.style.zIndex = "";
+      }
+    });
+
+    // Close theme menu when clicking outside
+    document.addEventListener("click", (e) => {
+      if (
+        !themeMenu.contains(e.target) &&
+        e.target !== themeBtnMobile &&
+        !themeMenu.classList.contains("hidden")
+      ) {
+        themeMenu.classList.add("hidden");
+        // Reset styles
+        themeMenu.style.position = "";
+        themeMenu.style.left = "";
+        themeMenu.style.top = "";
+        themeMenu.style.right = "";
+        themeMenu.style.zIndex = "";
+      }
     });
 
     // Close mobile menu when theme is selected
     const themeOptions = themeMenu.querySelectorAll(".theme-option");
     themeOptions.forEach((option) => {
       option.addEventListener("click", () => {
+        // Hide theme menu immediately
+        themeMenu.classList.add("hidden");
+        // Reset styles
+        themeMenu.style.position = "";
+        themeMenu.style.left = "";
+        themeMenu.style.top = "";
+        themeMenu.style.right = "";
+        themeMenu.style.zIndex = "";
+
+        // Close mobile menu after a small delay to see the theme change
         setTimeout(() => {
           closeMobileMenu();
-        }, 300); // Small delay to see the theme change
+        }, 300);
       });
     });
   }

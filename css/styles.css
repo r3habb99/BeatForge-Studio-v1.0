@@ -300,18 +300,9 @@ body {
     max-width: none;
   }
 
-  /* Shortcuts overlay - better mobile positioning */
+  /* Shortcuts overlay - hidden on mobile (available in hamburger menu) */
   .shortcuts-overlay {
-    bottom: 60px;
-    right: 10px;
-    left: 10px;
-    max-width: none;
-  }
-
-  .shortcuts-overlay.collapsed {
-    left: auto;
-    right: 10px;
-    width: auto;
+    display: none !important;
   }
 
   /* Theme menu - full width on mobile */
@@ -753,9 +744,12 @@ body {
 }
 
 .grid-container {
-  min-width: 100%;
+  width: 100%;
   position: relative;
   padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 /* Mobile: Better grid container */
@@ -792,6 +786,8 @@ body {
 .grid-col {
   min-width: var(--grid-cell-size);
   min-height: var(--grid-cell-size);
+  flex: 1;
+  max-width: 120px; /* Prevent cells from becoming too large on very wide screens */
 }
 
 .track-header-item {
@@ -942,6 +938,9 @@ body {
 
 .track-row {
   min-height: 150px;
+  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
 }
 
 @media (min-width: 768px) {
@@ -1472,6 +1471,142 @@ input[type="range"]:hover::-moz-range-thumb {
   box-shadow: 0 0 15px var(--accent-glow);
 }
 
+/* ===== ACTIONS MENU ===== */
+.actions-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: rgba(31, 41, 55, 0.95);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+    0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-width: 220px;
+  max-width: 280px;
+  z-index: 1001;
+  animation: slideDown 0.2s ease-out;
+}
+
+.actions-menu.hidden {
+  display: none;
+}
+
+.actions-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #e5e7eb;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-weight: 500;
+}
+
+.actions-menu-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+}
+
+.actions-menu-item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.actions-menu-item.btn-init {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.actions-menu-item.btn-init:hover {
+  background: rgba(96, 165, 250, 0.2);
+}
+
+.actions-menu-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 6px 0;
+}
+
+.actions-menu-section {
+  padding: 8px 0;
+}
+
+.actions-menu-section-title {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #9ca3af;
+  letter-spacing: 0.5px;
+}
+
+.theme-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 0 8px;
+}
+
+.theme-option-compact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.theme-option-compact:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.theme-option-compact.active {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #60a5fa;
+}
+
+.theme-option-compact.active::after {
+  content: "\f00c";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  color: #60a5fa;
+  font-size: 10px;
+}
+
+.theme-preview-compact {
+  width: 100%;
+  height: 32px;
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.theme-name-compact {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e5e7eb;
+}
+
 /* ===== THEME SWITCHER ===== */
 .theme-menu {
   position: absolute;
@@ -1486,7 +1621,7 @@ input[type="range"]:hover::-moz-range-thumb {
     0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 0 0 1px rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   min-width: 180px;
-  z-index: 1000;
+  z-index: 1001;
   animation: slideDown 0.2s ease-out;
 }
 
@@ -1631,14 +1766,9 @@ input[type="range"]:hover::-moz-range-thumb {
     padding: var(--spacing-sm);
   }
 
-  /* Shortcuts overlay - smaller */
+  /* Shortcuts overlay - hidden on mobile (available in hamburger menu) */
   .shortcuts-overlay {
-    font-size: 11px;
-    bottom: 50px;
-  }
-
-  .shortcut-item {
-    padding: 4px 6px;
+    display: none !important;
   }
 }
 
@@ -1778,26 +1908,9 @@ input[type="range"]:hover::-moz-range-thumb {
 }
 
 /* ===== KEYBOARD SHORTCUTS OVERLAY ===== */
+/* Hidden on all screens - shortcuts now available in Actions menu (desktop) and mobile menu */
 .shortcuts-overlay {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background: rgba(17, 24, 39, 0.95);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5),
-    0 1px 0 rgba(255, 255, 255, 0.1) inset, 0 0 0 1px rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  z-index: 9998;
-  min-width: 240px;
-  max-width: 280px;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  animation: slideInFromBottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.shortcuts-overlay.hidden {
-  display: none;
+  display: none !important;
 }
 
 .shortcuts-overlay.collapsed .shortcuts-overlay-content {
@@ -1917,10 +2030,7 @@ input[type="range"]:hover::-moz-range-thumb {
 
 @media (max-width: 768px) {
   .shortcuts-overlay {
-    bottom: 10px;
-    right: 10px;
-    left: 10px;
-    max-width: none;
+    display: none !important;
   }
 }
 
@@ -1976,7 +2086,7 @@ input[type="range"]:hover::-moz-range-thumb {
   bottom: 0;
   width: 300px;
   background: var(--bg-panel);
-  z-index: 1000;
+  z-index: 999;
   transform: translateX(-100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow-y: auto;
@@ -2085,7 +2195,7 @@ input[type="range"]:hover::-moz-range-thumb {
   background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 999;
+  z-index: 998;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;

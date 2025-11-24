@@ -279,7 +279,7 @@ function renderDesktopTracks(
       gridContainer.appendChild(rowDiv);
     }
 
-    rowDiv.className = "track-row flex min-w-max";
+    rowDiv.className = "track-row flex w-full";
 
     // Add click handler to highlight track when clicking anywhere on the row
     rowDiv.onclick = (e) => {
