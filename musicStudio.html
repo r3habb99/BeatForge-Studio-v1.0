@@ -3,7 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>BeatForge Studio - Web DAW</title>
     <link rel="icon" type="image/png" href="img/BeatForge%20Studio.png">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -16,44 +20,84 @@
     <!-- HEADER / TRANSPORT -->
     <header class="header-container bg-neutral-900 border-b border-gray-800 shrink-0 z-20" role="banner">
         <div class="header-content">
+            <!-- Mobile Hamburger Button (visible only on mobile < 768px) -->
+            <button id="mobileMenuBtn" class="mobile-menu-btn md:hidden" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+
             <!-- Logo and Title -->
             <div class="logo-section">
                 <div class="flex items-center" role="heading" aria-level="1">
-                    <img src="img/BeatForge%20Studio.png" alt="BeatForge Studio Logo" class="h-8 md:h-10 w-auto mr-2">
-                    <span class="text-blue-500 font-bold text-lg md:text-xl tracking-wider hidden sm:inline">BeatForge
-                        Studio</span>
-                    <span class="text-blue-500 font-bold text-lg md:text-xl tracking-wider sm:hidden">BeatForge</span>
+                    <img src="img/BeatForge%20Studio.png" alt="BeatForge Studio Logo" class="h-8 md:h-10 w-auto">
+                    <h1 class="text-blue-500 font-bold text-lg md:text-xl tracking-wider hidden md:inline">BeatForge
+                        Studio</h1>
                 </div>
             </div>
 
-            <!-- Transport Controls -->
-            <nav aria-label="Transport controls" class="transport-controls">
-                <button id="playBtn" aria-label="Play (Spacebar)"
-                    class="btn-transport bg-green-600 hover:bg-green-500 text-white">
-                    <i class="fas fa-play" aria-hidden="true"></i>
-                </button>
-                <button id="stopBtn" aria-label="Stop" class="btn-transport bg-gray-700 hover:bg-gray-600 text-white">
-                    <i class="fas fa-stop" aria-hidden="true"></i>
-                </button>
-            </nav>
+            <!-- Playback Controls Group -->
+            <div class="playback-controls-group">
+                <!-- Transport Controls -->
+                <nav aria-label="Transport controls" class="transport-controls">
+                    <button id="playBtn" aria-label="Play (Spacebar)" data-tooltip="Play/Pause"
+                        data-tooltip-shortcut="Space" class="btn-transport bg-green-600 hover:bg-green-500 text-white">
+                        <i class="fas fa-play" aria-hidden="true"></i>
+                    </button>
+                    <button id="stopBtn" aria-label="Stop" data-tooltip="Stop playback"
+                        class="btn-transport bg-gray-700 hover:bg-gray-600 text-white">
+                        <i class="fas fa-stop" aria-hidden="true"></i>
+                    </button>
+                </nav>
 
-            <!-- BPM Control -->
-            <div class="control-group">
-                <label for="bpmInput" class="control-label">BPM</label>
-                <input type="number" id="bpmInput" value="120" min="40" max="240" aria-label="Beats per minute"
-                    class="control-input w-14 md:w-16">
-            </div>
+                <!-- BPM Control -->
+                <div class="control-group" data-tooltip="Tempo in beats per minute (40-240)">
+                    <label for="bpmInput" class="control-label">BPM</label>
+                    <input type="number" id="bpmInput" value="120" min="40" max="240" aria-label="Beats per minute"
+                        class="control-input w-14 md:w-16">
+                </div>
 
-            <!-- Swing Control -->
-            <div class="control-group hidden md:flex">
-                <label for="swingInput" class="control-label">Swing</label>
-                <input type="range" id="swingInput" min="0" max="0.5" step="0.01" value="0" aria-label="Swing amount"
-                    class="w-16 md:w-20 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <!-- Swing Control -->
+                <div class="control-group hidden md:flex" data-tooltip="Add groove and timing variation">
+                    <label for="swingInput" class="control-label">Swing</label>
+                    <input type="range" id="swingInput" min="0" max="0.5" step="0.01" value="0"
+                        aria-label="Swing amount"
+                        class="w-16 md:w-20 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Master Volume -->
+                <div class="control-group hidden md:flex">
+                    <label for="masterVol" class="control-label">Master</label>
+                    <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.8"
+                        aria-label="Master volume"
+                        class="w-16 md:w-24 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
             </div>
 
             <!-- Visualizer -->
-            <canvas id="visualizer" width="240" height="60" aria-label="Audio visualizer"
-                class="visualizer hidden lg:block"></canvas>
+            <div class="visualizer-container hidden xl:flex">
+                <canvas id="visualizer" width="320" height="80" aria-label="Audio visualizer"
+                    class="visualizer"></canvas>
+                <button id="visualizerModeBtn" aria-label="Change visualizer mode" class="visualizer-mode-btn">
+                    <i class="fas fa-wave-square"></i>
+                </button>
+            </div>
+
+            <!-- Recording Controls Group -->
+            <div class="recording-controls-group hidden md:flex">
+                <nav aria-label="Recording controls" class="flex gap-1">
+                    <button id="recordBtn" aria-label="Start/Resume Recording" data-tooltip="Start recording"
+                        class="px-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-400">
+                        <i class="fas fa-circle"></i>
+                    </button>
+                    <button id="pauseRecordBtn" aria-label="Pause Recording" data-tooltip="Pause recording" disabled
+                        class="px-2 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-pause"></i>
+                    </button>
+                    <button id="stopRecordBtn" aria-label="Stop Recording" data-tooltip="Stop recording" disabled
+                        class="px-2 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-stop"></i>
+                    </button>
+                </nav>
+            </div>
 
             <!-- Pattern Selector -->
             <div class="control-group hidden lg:flex">
@@ -64,51 +108,173 @@
                 </select>
             </div>
 
-            <!-- Master Volume -->
-            <div class="control-group hidden sm:flex">
-                <label for="masterVol" class="control-label">Master</label>
-                <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.8" aria-label="Master volume"
-                    class="w-16 md:w-24 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <!-- Action Buttons Group -->
+            <div class="action-buttons-group hidden md:flex">
+                <!-- Export Button -->
+                <button id="exportBtn" onclick="exportProject()" aria-label="Export Recording"
+                    data-tooltip="Download your recording" disabled
+                    class="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-download mr-1"></i>
+                    <span>Export</span>
+                </button>
+
+                <!-- Clear All Button -->
+                <button id="clearBtn" onclick="clearAllData()" aria-label="Clear all notes and reset"
+                    data-tooltip="Clear all tracks and reset" data-tooltip-shortcut="Ctrl+Del"
+                    class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-400">
+                    <i class="fas fa-trash mr-1"></i>
+                    <span>Clear All</span>
+                </button>
+
+                <!-- Theme Switcher -->
+                <div class="relative">
+                    <button id="themeBtn" aria-label="Change theme"
+                        class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-400">
+                        <i class="fas fa-palette mr-1"></i>
+                        <span>Theme</span>
+                    </button>
+                    <div id="themeMenu" class="theme-menu hidden">
+                        <button data-theme="dark" class="theme-option active">
+                            <span class="theme-preview"
+                                style="background: linear-gradient(135deg, #121212, #1e1e1e)"></span>
+                            <span>Dark</span>
+                            <i class="fas fa-check theme-check"></i>
+                        </button>
+                        <button data-theme="darker" class="theme-option">
+                            <span class="theme-preview"
+                                style="background: linear-gradient(135deg, #0a0a0a, #141414)"></span>
+                            <span>Darker</span>
+                            <i class="fas fa-check theme-check"></i>
+                        </button>
+                        <button data-theme="cyberpunk" class="theme-option">
+                            <span class="theme-preview"
+                                style="background: linear-gradient(135deg, #0d0221, #ff006e)"></span>
+                            <span>Cyberpunk</span>
+                            <i class="fas fa-check theme-check"></i>
+                        </button>
+                        <button data-theme="neon" class="theme-option">
+                            <span class="theme-preview"
+                                style="background: linear-gradient(135deg, #0a0e27, #00f5ff)"></span>
+                            <span>Neon</span>
+                            <i class="fas fa-check theme-check"></i>
+                        </button>
+                        <button data-theme="ocean" class="theme-option">
+                            <span class="theme-preview"
+                                style="background: linear-gradient(135deg, #001f3f, #00d9ff)"></span>
+                            <span>Ocean</span>
+                            <i class="fas fa-check theme-check"></i>
+                        </button>
+                        <button data-theme="sunset" class="theme-option">
+                            <span class="theme-preview"
+                                style="background: linear-gradient(135deg, #1a0f0f, #ff6b35)"></span>
+                            <span>Sunset</span>
+                            <i class="fas fa-check theme-check"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Initialize Button -->
+                <button id="initAudioBtn" aria-label="Initialize audio engine"
+                    class="btn-init px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs md:text-sm font-bold animate-pulse focus:outline-none focus:ring-2 focus:ring-blue-400">
+                    <span class="hidden md:inline">Initialize Audio</span>
+                    <span class="md:hidden">Init</span>
+                </button>
+            </div>
+    </header>
+
+    <!-- MOBILE HAMBURGER MENU (visible only on mobile < 768px) -->
+    <div id="mobileMenu" class="mobile-menu" aria-hidden="true">
+        <!-- Menu Content -->
+        <div class="mobile-menu-content">
+            <!-- Menu Header -->
+            <div class="mobile-menu-header">
+                <h2 class="text-lg font-bold text-white">Menu</h2>
+                <button id="closeMobileMenuBtn" class="mobile-menu-close" aria-label="Close menu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Pattern Selector -->
+            <div class="mobile-menu-section">
+                <h3 class="mobile-menu-section-title">
+                    <i class="fas fa-music mr-2"></i>Pattern
+                </h3>
+                <div class="mobile-menu-item">
+                    <select id="patternSelectMobile" aria-label="Select pattern"
+                        class="w-full bg-gray-800 text-white px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="0">Pattern 1</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Master Controls -->
+            <div class="mobile-menu-section">
+                <h3 class="mobile-menu-section-title">
+                    <i class="fas fa-sliders-h mr-2"></i>Master Controls
+                </h3>
+                <div class="mobile-menu-item">
+                    <label for="masterVolMobile" class="text-xs text-gray-400 mb-1 block">Volume</label>
+                    <input type="range" id="masterVolMobile" min="0" max="1" step="0.01" value="0.8"
+                        aria-label="Master volume" class="w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mobile-menu-item">
+                    <label for="swingInputMobile" class="text-xs text-gray-400 mb-1 block">Swing</label>
+                    <input type="range" id="swingInputMobile" min="0" max="0.5" step="0.01" value="0"
+                        aria-label="Swing amount" class="w-full focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
             </div>
 
             <!-- Recording Controls -->
-            <nav aria-label="Recording controls" class="flex gap-1 hidden md:flex">
-                <button id="recordBtn" aria-label="Start/Resume Recording"
-                    class="px-2 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-red-400">
-                    <i class="fas fa-circle"></i>
-                </button>
-                <button id="pauseRecordBtn" aria-label="Pause Recording" disabled
-                    class="px-2 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fas fa-pause"></i>
-                </button>
-                <button id="stopRecordBtn" aria-label="Stop Recording" disabled
-                    class="px-2 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded text-xs font-bold focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <i class="fas fa-stop"></i>
-                </button>
-            </nav>
+            <div class="mobile-menu-section">
+                <h3 class="mobile-menu-section-title">
+                    <i class="fas fa-microphone mr-2"></i>Recording
+                </h3>
+                <div class="mobile-menu-item flex gap-2">
+                    <button id="recordBtnMobile" aria-label="Start/Resume Recording"
+                        class="flex-1 px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-sm font-bold focus:outline-none focus:ring-2 focus:ring-red-400">
+                        <i class="fas fa-circle mr-1"></i>Record
+                    </button>
+                    <button id="pauseRecordBtnMobile" aria-label="Pause Recording" disabled
+                        class="flex-1 px-3 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded text-sm font-bold focus:outline-none focus:ring-2 focus:ring-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-pause mr-1"></i>Pause
+                    </button>
+                    <button id="stopRecordBtnMobile" aria-label="Stop Recording" disabled
+                        class="flex-1 px-3 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded text-sm font-bold focus:outline-none focus:ring-2 focus:ring-gray-400 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fas fa-stop mr-1"></i>Stop
+                    </button>
+                </div>
+            </div>
 
-            <!-- Export Button -->
-            <button id="exportBtn" onclick="exportProject()" aria-label="Export Recording" disabled
-                class="px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded text-xs font-bold hidden md:block focus:outline-none focus:ring-2 focus:ring-purple-400 disabled:opacity-50 disabled:cursor-not-allowed">
-                <i class="fas fa-download mr-1"></i>
-                <span>Export</span>
-            </button>
+            <!-- Actions -->
+            <div class="mobile-menu-section">
+                <h3 class="mobile-menu-section-title">
+                    <i class="fas fa-cog mr-2"></i>Actions
+                </h3>
+                <button id="exportBtnMobile" aria-label="Export Recording" disabled
+                    class="mobile-menu-button bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-download mr-2"></i>Export
+                </button>
+                <button id="clearAllBtnMobile" aria-label="Clear all notes and reset"
+                    class="mobile-menu-button bg-red-600 hover:bg-red-500">
+                    <i class="fas fa-trash mr-2"></i>Clear All
+                </button>
+                <button id="themeBtnMobile" aria-label="Change theme"
+                    class="mobile-menu-button bg-gray-700 hover:bg-gray-600">
+                    <i class="fas fa-palette mr-2"></i>Theme
+                </button>
+            </div>
 
-            <!-- Clear All Button -->
-            <button id="clearBtn" onclick="clearAllData()" aria-label="Clear all notes and reset"
-                class="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold hidden md:block focus:outline-none focus:ring-2 focus:ring-red-400">
-                <i class="fas fa-trash mr-1"></i>
-                <span>Clear All</span>
-            </button>
-
-            <!-- Initialize Button -->
-            <button id="initAudioBtn" aria-label="Initialize audio engine"
-                class="btn-init px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded text-xs md:text-sm font-bold animate-pulse focus:outline-none focus:ring-2 focus:ring-blue-400">
-                <span class="hidden md:inline">Initialize Audio</span>
-                <span class="md:hidden">Init</span>
-            </button>
+            <!-- Shortcuts -->
+            <div class="mobile-menu-section">
+                <button id="shortcutsBtnMobile" class="mobile-menu-button bg-blue-600 hover:bg-blue-500">
+                    <i class="fas fa-keyboard mr-2"></i>Keyboard Shortcuts
+                </button>
+            </div>
         </div>
-    </header>
+    </div>
+
+    <!-- Mobile Menu Backdrop -->
+    <div id="mobileMenuBackdrop" class="mobile-menu-backdrop" aria-hidden="true"></div>
 
     <!-- MAIN WORKSPACE -->
     <main class="main-workspace" role="main">
@@ -234,6 +400,44 @@
             <!-- Grid -->
             <section class="flex-1 bg-[#1e1e1e] relative overflow-auto" id="pianoGrid" role="grid"
                 aria-label="Note grid"></section>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- KEYBOARD SHORTCUTS OVERLAY -->
+    <div id="shortcutsOverlay" class="shortcuts-overlay hidden">
+        <div class="shortcuts-overlay-header">
+            <h3 class="shortcuts-overlay-title">
+                <i class="fas fa-keyboard mr-2"></i>
+                Shortcuts
+            </h3>
+            <button id="toggleShortcutsOverlay" aria-label="Toggle shortcuts panel" class="shortcuts-toggle-btn">
+                <i class="fas fa-chevron-down"></i>
+            </button>
+        </div>
+        <div class="shortcuts-overlay-content">
+            <div class="shortcut-item">
+                <kbd>Space</kbd>
+                <span>Play/Pause</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Esc</kbd>
+                <span>Close Piano Roll</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Del</kbd>
+                <span>Clear Track</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>S</kbd>
+                <span>Save State</span>
+            </div>
+            <div class="shortcut-item">
+                <kbd>?</kbd>
+                <span>Show Help</span>
+            </div>
         </div>
     </div>
 
