@@ -7,7 +7,7 @@ This document lists all files created for deploying BeatForge Studio with optima
 ### 1. **sitemap.xml**
 
 - **Purpose**: SEO - Helps search engines discover and index your pages
-- **Action Required**: Update `https://yourdomain.com/` with your actual domain
+- **Action Required**: Update `https://r3habb99.github.io/` with your actual domain
 - **Submit To**: Google Search Console, Bing Webmaster Tools
 
 ### 2. **robots.txt**
@@ -107,7 +107,7 @@ This document lists all files created for deploying BeatForge Studio with optima
    # - robots.txt
    # - index.html (meta tags)
 
-   # Replace: https://yourdomain.com/
+   # Replace: https://r3habb99.github.io/
    # With: https://your-actual-domain.com/
    ```
 

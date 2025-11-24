@@ -15,7 +15,7 @@ Allow: /
 Allow: /img/
 
 # Sitemap location
-Sitemap: https://yourdomain.com/sitemap.xml
+Sitemap: https://r3habb99.github.io/sitemap.xml
 
 # Crawl-delay (optional, in seconds)
 # Crawl-delay: 1

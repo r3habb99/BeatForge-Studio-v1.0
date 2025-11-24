@@ -23,7 +23,7 @@ Before deploying, ensure you've completed these steps:
 
 ### 1. Update Configuration Files
 
-Replace `https://yourdomain.com/` with your actual domain in:
+Replace `https://r3habb99.github.io/` with your actual domain in:
 
 - [ ] `sitemap.xml` - Update all `<loc>` URLs
 - [ ] `robots.txt` - Update Sitemap URL
@@ -250,7 +250,7 @@ Replace `https://yourdomain.com/` with your actual domain in:
    server {
        listen 80;
        listen [::]:80;
-       server_name yourdomain.com www.yourdomain.com;
+       server_name r3habb99.github.io www.r3habb99.github.io;
 
        # Redirect to HTTPS
        return 301 https://$server_name$request_uri;
@@ -259,14 +259,14 @@ Replace `https://yourdomain.com/` with your actual domain in:
    server {
        listen 443 ssl http2;
        listen [::]:443 ssl http2;
-       server_name yourdomain.com www.yourdomain.com;
+       server_name r3habb99.github.io www.r3habb99.github.io;
 
        root /var/www/beatforge;
        index index.html;
 
        # SSL Configuration (use Let's Encrypt)
-       ssl_certificate /etc/letsencrypt/live/yourdomain.com/fullchain.pem;
-       ssl_certificate_key /etc/letsencrypt/live/yourdomain.com/privkey.pem;
+       ssl_certificate /etc/letsencrypt/live/r3habb99.github.io/fullchain.pem;
+       ssl_certificate_key /etc/letsencrypt/live/r3habb99.github.io/privkey.pem;
 
        # Security Headers
        add_header X-Frame-Options "SAMEORIGIN" always;
@@ -314,7 +314,7 @@ Replace `https://yourdomain.com/` with your actual domain in:
 
    ```bash
    sudo apt install certbot python3-certbot-nginx
-   sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+   sudo certbot --nginx -d r3habb99.github.io -d www.r3habb99.github.io
    ```
 
 ---
@@ -337,7 +337,7 @@ Replace `https://yourdomain.com/` with your actual domain in:
 1. Go to [search.google.com/search-console](https://search.google.com/search-console)
 2. Add your property
 3. Verify ownership
-4. Submit sitemap: `https://yourdomain.com/sitemap.xml`
+4. Submit sitemap: `https://r3habb99.github.io/sitemap.xml`
 
 **Bing Webmaster Tools:**
 
@@ -411,7 +411,7 @@ convert input.png -quality 85 output.webp
 npm install -g lighthouse
 
 # Run audit
-lighthouse https://yourdomain.com --view
+lighthouse https://r3habb99.github.io --view
 ```
 
 **Target Scores:**
@@ -439,7 +439,7 @@ lighthouse https://yourdomain.com --view
 
 In `index.html`, replace:
 
-- `https://yourdomain.com/` with your actual domain
+- `https://r3habb99.github.io/` with your actual domain
 - Update descriptions to match your branding
 - Add your social media handles
 

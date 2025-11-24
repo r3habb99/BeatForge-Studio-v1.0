@@ -5,7 +5,7 @@ Get your BeatForge Studio online in 5 minutes!
 ## 🎯 Before You Start
 
 1. **Update Your Domain** in these files:
-   - `sitemap.xml` - Replace `https://yourdomain.com/`
+   - `sitemap.xml` - Replace `https://r3habb99.github.io/`
    - `robots.txt` - Update Sitemap URL
    - `index.html` - Update meta tags (lines 20, 24, 28, 32, 63)
 
@@ -124,7 +124,7 @@ sudo nginx -t
 sudo systemctl reload nginx
 
 # 4. Install SSL
-sudo certbot --nginx -d yourdomain.com
+sudo certbot --nginx -d r3habb99.github.io
 ```
 
 ---
@@ -145,7 +145,7 @@ sudo certbot --nginx -d yourdomain.com
 ### PWA Not Installing?
 
 1. Ensure HTTPS is enabled
-2. Check manifest.json is accessible: `yourdomain.com/manifest.json`
+2. Check manifest.json is accessible: `r3habb99.github.io/manifest.json`
 3. Clear browser cache and try again
 
 ### Service Worker Errors?
