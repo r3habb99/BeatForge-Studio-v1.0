@@ -62,7 +62,6 @@ function initVisualizerMode() {
 function drawVisualizer() {
   const canvas = document.getElementById("visualizer");
   if (!canvas) {
-    console.warn("Visualizer canvas not found");
     return;
   }
 
@@ -70,7 +69,6 @@ function drawVisualizer() {
   const analyser = getAnalyser();
 
   if (!analyser) {
-    console.warn("Analyser not initialized yet");
     return;
   }
 
@@ -103,7 +101,6 @@ function drawVisualizer() {
     }
   }
 
-  console.log("Visualizer initialized successfully");
   draw();
 }
 

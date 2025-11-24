@@ -15,7 +15,6 @@ export function initMobileMenu() {
   const mobileMenuBackdrop = document.getElementById("mobileMenuBackdrop");
 
   if (!mobileMenuBtn || !mobileMenu || !mobileMenuBackdrop) {
-    console.warn("Mobile menu elements not found");
     return;
   }
 

@@ -49,7 +49,6 @@ function initializeApp() {
     document.getElementById("initAudioBtn").classList.add("hidden");
     loadState();
     renderUI();
-    console.log("Application initialized successfully");
   } catch (error) {
     console.error("Failed to initialize application:", error);
     alert(
@@ -176,7 +175,6 @@ function clearAllData() {
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
   // Initialize UI enhancements first
-  console.log("🎨 Initializing UI enhancements...");
   try {
     initTheme();
     initTooltips();
@@ -185,9 +183,8 @@ document.addEventListener("DOMContentLoaded", () => {
     initMobileMenu();
     initActionsMenu();
     initVisualizerMode();
-    console.log("✅ UI enhancements initialized");
   } catch (error) {
-    console.error("❌ UI enhancements initialization failed:", error);
+    console.error("UI enhancements initialization failed:", error);
   }
 
   // Initialize app

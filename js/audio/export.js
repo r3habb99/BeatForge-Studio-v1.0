@@ -11,11 +11,11 @@
  * - export/offline-renderer.js - Main rendering orchestration
  */
 
-import { STEP_COUNT } from '../constants.js';
-import { setupOfflineEffects } from './export/offline-effects.js';
-import { audioBufferToWav, downloadWav } from './export/wav-converter.js';
-import { renderDrumSound } from './export/offline-drum-renderer.js';
-import { renderSynthSound } from './export/offline-synth-renderer.js';
+import { STEP_COUNT } from "../constants.js";
+import { setupOfflineEffects } from "./export/offline-effects.js";
+import { audioBufferToWav, downloadWav } from "./export/wav-converter.js";
+import { renderDrumSound } from "./export/offline-drum-renderer.js";
+import { renderSynthSound } from "./export/offline-synth-renderer.js";
 
 /**
  * Main export function - renders pattern to WAV and downloads
@@ -24,67 +24,85 @@ import { renderSynthSound } from './export/offline-synth-renderer.js';
  * @returns {Promise<boolean>} Success status
  */
 async function exportToWAV(state, tracks) {
-    try {
-        // Calculate duration - render 1 full pattern loop
-        const secondsPerBeat = 60.0 / state.bpm;
-        const patternDuration = STEP_COUNT * 0.25 * secondsPerBeat;
-        // Add extra time for reverb/delay tails
-        const duration = patternDuration + 3;
+  try {
+    // Calculate duration - render 1 full pattern loop
+    const secondsPerBeat = 60.0 / state.bpm;
+    const patternDuration = STEP_COUNT * 0.25 * secondsPerBeat;
+    // Add extra time for reverb/delay tails
+    const duration = patternDuration + 3;
 
-        // Create offline context
-        const sampleRate = 44100;
-        const offlineCtx = new OfflineAudioContext(2, sampleRate * duration, sampleRate);
+    // Create offline context
+    const sampleRate = 44100;
+    const offlineCtx = new OfflineAudioContext(
+      2,
+      sampleRate * duration,
+      sampleRate
+    );
 
-        // Setup offline effects chain
-        const { masterGain, reverbNode, delayNode } = setupOfflineEffects(offlineCtx);
+    // Setup offline effects chain
+    const { masterGain, reverbNode, delayNode } =
+      setupOfflineEffects(offlineCtx);
 
-        // Get swing value
-        const swingInput = document.getElementById('swingInput');
-        const swing = swingInput ? parseFloat(swingInput.value) : 0;
+    // Get swing value
+    const swingInput = document.getElementById("swingInput");
+    const swing = swingInput ? parseFloat(swingInput.value) : 0;
 
-        // Check for solo tracks
-        const anySolo = tracks.some(t => t.solo);
+    // Check for solo tracks
+    const anySolo = tracks.some((t) => t.solo);
 
-        // Schedule all notes
-        for (let step = 0; step < STEP_COUNT; step++) {
-            const baseTime = step * 0.25 * secondsPerBeat;
-            const swingTime = (step % 2 !== 0) ? swing * secondsPerBeat : 0;
-            const time = baseTime + swingTime;
+    // Schedule all notes
+    for (let step = 0; step < STEP_COUNT; step++) {
+      const baseTime = step * 0.25 * secondsPerBeat;
+      const swingTime = step % 2 !== 0 ? swing * secondsPerBeat : 0;
+      const time = baseTime + swingTime;
 
-            tracks.forEach(track => {
-                // Skip muted tracks
-                if (track.mute) return;
+      tracks.forEach((track) => {
+        // Skip muted tracks
+        if (track.mute) return;
 
-                // Skip non-solo tracks if any solo is active
-                if (anySolo && !track.solo) return;
+        // Skip non-solo tracks if any solo is active
+        if (anySolo && !track.solo) return;
 
-                if (track.type === 'drum' && track.steps[step]) {
-                    renderDrumSound(offlineCtx, track, time, masterGain, reverbNode, delayNode);
-                } else if (track.type === 'synth') {
-                    const notesHere = track.notes.filter(n => n.step === step);
-                    notesHere.forEach(note => {
-                        const noteDuration = note.len * secondsPerBeat * 0.25;
-                        renderSynthSound(offlineCtx, track, note, time, noteDuration, masterGain, reverbNode, delayNode);
-                    });
-                }
-            });
+        if (track.type === "drum" && track.steps[step]) {
+          renderDrumSound(
+            offlineCtx,
+            track,
+            time,
+            masterGain,
+            reverbNode,
+            delayNode
+          );
+        } else if (track.type === "synth") {
+          const notesHere = track.notes.filter((n) => n.step === step);
+          notesHere.forEach((note) => {
+            const noteDuration = note.len * secondsPerBeat * 0.25;
+            renderSynthSound(
+              offlineCtx,
+              track,
+              note,
+              time,
+              noteDuration,
+              masterGain,
+              reverbNode,
+              delayNode
+            );
+          });
         }
-
-        // Render audio
-        console.log('Rendering audio...');
-        const renderedBuffer = await offlineCtx.startRendering();
-        console.log('Audio rendered successfully');
-
-        // Convert to WAV and download
-        const wav = audioBufferToWav(renderedBuffer);
-        downloadWav(wav, `music-studio-${Date.now()}.wav`);
-
-        console.log('Export completed successfully');
-        return true;
-    } catch (error) {
-        console.error('Export failed:', error);
-        throw error;
+      });
     }
+
+    // Render audio
+    const renderedBuffer = await offlineCtx.startRendering();
+
+    // Convert to WAV and download
+    const wav = audioBufferToWav(renderedBuffer);
+    downloadWav(wav, `music-studio-${Date.now()}.wav`);
+
+    return true;
+  } catch (error) {
+    console.error("Export failed:", error);
+    throw error;
+  }
 }
 
 export { exportToWAV };
