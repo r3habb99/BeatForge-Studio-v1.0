@@ -34,11 +34,40 @@ function initAudioContext() {
     analyser.fftSize = 2048;
     frequencyData = new Uint8Array(analyser.frequencyBinCount);
 
+    // Handle page visibility changes to prevent audio context suspension
+    // This prevents browser throttling from affecting audio playback
+    setupPageVisibilityHandler();
+
     return audioCtx;
   } catch (error) {
     console.error("Failed to initialize audio context:", error);
     throw error;
   }
+}
+
+/**
+ * Setup page visibility handler to prevent audio context suspension
+ * Browsers may throttle setTimeout when tab is inactive, causing audio dropouts
+ */
+function setupPageVisibilityHandler() {
+  document.addEventListener("visibilitychange", async () => {
+    if (!audioCtx) return;
+
+    if (document.hidden) {
+      // Page is hidden - audio context may get suspended by browser
+      console.log("Page hidden - audio context state:", audioCtx.state);
+    } else {
+      // Page is visible again - resume audio context if suspended
+      if (audioCtx.state === "suspended") {
+        try {
+          await audioCtx.resume();
+          console.log("Audio context resumed after page became visible");
+        } catch (error) {
+          console.error("Failed to resume audio context:", error);
+        }
+      }
+    }
+  });
 }
 
 /**
