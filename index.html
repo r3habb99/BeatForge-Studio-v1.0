@@ -67,13 +67,20 @@
         // Register service worker for PWA functionality
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./service-worker.js')
-                    .then(() => {
-                        // Service worker registered successfully
-                    })
-                    .catch(() => {
-                        // Service worker registration failed - silent fail for better UX
+                // Unregister old service workers first
+                navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    registrations.forEach((registration) => {
+                        registration.unregister();
                     });
+                }).then(() => {
+                    // Register new service worker
+                    return navigator.serviceWorker.register('./service-worker.js');
+                }).then((registration) => {
+                    // Force update check
+                    registration.update();
+                }).catch(() => {
+                    // Service worker registration failed - silent fail for better UX
+                });
             });
         }
     </script>

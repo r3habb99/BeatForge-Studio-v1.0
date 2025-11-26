@@ -3,8 +3,8 @@
  * Provides offline capabilities and performance optimization
  */
 
-const CACHE_NAME = "beatforge-studio-v1.0.1";
-const RUNTIME_CACHE = "beatforge-runtime-v1.0.1";
+const CACHE_NAME = "beatforge-studio-v1.0.2";
+const RUNTIME_CACHE = "beatforge-runtime-v1.0.2";
 
 // Files to cache on install
 const STATIC_ASSETS = [
@@ -116,7 +116,15 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => {
-        return cache.addAll(STATIC_ASSETS);
+        // Cache files individually to handle missing files gracefully
+        return Promise.allSettled(
+          STATIC_ASSETS.map((url) =>
+            cache.add(url).catch((err) => {
+              console.warn(`Failed to cache ${url}:`, err.message);
+              return null;
+            })
+          )
+        );
       })
       .then(() => self.skipWaiting())
   );
