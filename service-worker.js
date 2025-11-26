@@ -3,8 +3,8 @@
  * Provides offline capabilities and performance optimization
  */
 
-const CACHE_NAME = "beatforge-studio-v1.0.0";
-const RUNTIME_CACHE = "beatforge-runtime-v1.0.0";
+const CACHE_NAME = "beatforge-studio-v1.0.1";
+const RUNTIME_CACHE = "beatforge-runtime-v1.0.1";
 
 // Files to cache on install
 const STATIC_ASSETS = [
@@ -13,6 +13,11 @@ const STATIC_ASSETS = [
   "/css/styles.css",
   "/js/app.js",
   "/js/constants.js",
+
+  // Config
+  "/js/config/audioConfig.js",
+
+  // Audio Engine
   "/js/audio/audioEngine.js",
   "/js/audio/audioContext.js",
   "/js/audio/effects.js",
@@ -20,12 +25,54 @@ const STATIC_ASSETS = [
   "/js/audio/export.js",
   "/js/audio/routing.js",
   "/js/audio/helpers.js",
+
+  // Drums
   "/js/audio/drums/drumSounds.js",
+  "/js/audio/drums/sounds/index.js",
+  "/js/audio/drums/sounds/kick.js",
+  "/js/audio/drums/sounds/snare.js",
+  "/js/audio/drums/sounds/hihat.js",
+  "/js/audio/drums/sounds/clap.js",
+  "/js/audio/drums/sounds/rimshot.js",
+  "/js/audio/drums/sounds/cowbell.js",
+  "/js/audio/drums/sounds/tom.js",
+  "/js/audio/drums/sounds/crash.js",
+  "/js/audio/drums/sounds/ride.js",
+  "/js/audio/drums/sounds/shaker.js",
+  "/js/audio/drums/sounds/tambourine.js",
+
+  // Synths
   "/js/audio/synths/synthSounds.js",
+  "/js/audio/synths/types/index.js",
+  "/js/audio/synths/types/basic-synth.js",
+  "/js/audio/synths/types/pad-synth.js",
+  "/js/audio/synths/types/pluck-synth.js",
+  "/js/audio/synths/types/organ.js",
+  "/js/audio/synths/types/fm-synth.js",
+  "/js/audio/synths/types/acid-bass.js",
+  "/js/audio/synths/types/reese-bass.js",
+  "/js/audio/synths/types/sub-bass.js",
+
+  // Audio Utils
   "/js/audio/utils/impulse-response.js",
   "/js/audio/utils/distortion-curve.js",
+  "/js/audio/utils/noise-generator.js",
+  "/js/audio/utils/frequency-converter.js",
+  "/js/audio/utils/time-helpers.js",
+
+  // Export
+  "/js/audio/export/offline-renderer.js",
+  "/js/audio/export/offline-drum-renderer.js",
+  "/js/audio/export/offline-synth-renderer.js",
+  "/js/audio/export/offline-effects.js",
+  "/js/audio/export/offline-routing.js",
+  "/js/audio/export/wav-converter.js",
+
+  // State & Scheduler
   "/js/state/stateManager.js",
   "/js/scheduler/scheduler.js",
+
+  // UI
   "/js/ui/eventHandlers.js",
   "/js/ui/trackRenderer.js",
   "/js/ui/pianoRoll.js",
@@ -35,15 +82,30 @@ const STATIC_ASSETS = [
   "/js/ui/actionsMenu.js",
   "/js/ui/mobileMenu.js",
   "/js/ui/scrollSync.js",
+
+  // UI Controls
   "/js/ui/controls/keyboardShortcuts.js",
   "/js/ui/controls/recordingControls.js",
+  "/js/ui/controls/playbackControls.js",
+  "/js/ui/controls/patternControls.js",
+  "/js/ui/controls/effectsControls.js",
+
+  // Utils
   "/js/utils/toast.js",
   "/js/utils/tooltip.js",
   "/js/utils/theme.js",
   "/js/utils/trackColors.js",
   "/js/utils/shortcutsOverlay.js",
   "/js/utils/uiEnhancements.js",
+  "/js/utils/logger.js",
+  "/js/utils/validators.js",
+  "/js/utils/circularBuffer.js",
+  "/js/utils/debounce.js",
+
+  // Constants
   "/js/constants/themes.js",
+
+  // Assets
   "/img/BeatForge Studio.png",
   "/manifest.json",
 ];
