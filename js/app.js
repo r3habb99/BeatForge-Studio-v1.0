@@ -1,6 +1,7 @@
 /**
  * Main Application Logic
  * Orchestrates all modules and handles initialization
+ * Uses BeatForge namespace to avoid global scope pollution
  */
 
 // Import modules
@@ -37,11 +38,49 @@ import { initTooltips } from "./utils/tooltip.js";
 import { initShortcutsOverlay } from "./utils/shortcutsOverlay.js";
 import { initTrackColors } from "./utils/trackColors.js";
 import { initActionsMenu } from "./ui/actionsMenu.js";
+import { Logger } from "./utils/logger.js";
+
+// Import configuration
+import {
+  getConfig,
+  getEnvironment,
+  setEnvironment,
+} from "./config/audioConfig.js";
+
+/**
+ * Initialize configuration based on environment
+ */
+function initializeConfig() {
+  const environment = getEnvironment();
+  const config = getConfig(environment);
+
+  // Log environment and config status
+  Logger.info(`Environment: ${environment}`);
+  Logger.info(`Logging enabled: ${config.ENABLE_LOGGING}`);
+  Logger.info(`Log level: ${config.LOG_LEVEL}`);
+
+  // Store config globally for access by other modules
+  window.BEATFORGE_CONFIG = config;
+  window.BEATFORGE_ENV = environment;
+
+  // Expose utilities for dev/debugging
+  if (environment === "development") {
+    window.setEnvironment = setEnvironment;
+    window.getEnvironment = getEnvironment;
+    window.getConfig = getConfig;
+    console.info(
+      "BeatForge environment utilities available: setEnvironment(), getEnvironment(), getConfig()"
+    );
+    console.info('Usage: setEnvironment("production") then reload page');
+  }
+}
 
 /**
  * Initialize audio and UI
  */
 function initializeApp() {
+  // Initialize config first
+  initializeConfig();
   try {
     initAudio();
     drawVisualizer();
@@ -49,8 +88,14 @@ function initializeApp() {
     document.getElementById("initAudioBtn").classList.add("hidden");
     loadState();
     renderUI();
+    Logger.info("Application initialized successfully");
   } catch (error) {
-    console.error("Failed to initialize application:", error);
+    Logger.error(
+      Logger.ERROR_CODES.UI_INITIALIZATION_FAILED,
+      `Failed to initialize application: ${error.message}`,
+      {},
+      error
+    );
     alert(
       `Audio Initialization Failed: ${error.message}\n\nPlease check your browser settings and ensure audio is not blocked.`
     );
@@ -106,6 +151,8 @@ async function exportProject() {
       '<i class="fas fa-spinner fa-spin mr-1"></i><span>Exporting...</span>';
     exportBtn.disabled = true;
 
+    Logger.info("Starting project export");
+
     // Check if there's a recording to export
     if (hasRecording()) {
       // Export the recorded audio
@@ -120,6 +167,7 @@ async function exportProject() {
           "Recording exported successfully! Your audio file has been downloaded."
         );
       }
+      Logger.info("Recording exported successfully");
     } else {
       // Fallback to offline rendering (old behavior)
       await exportToWAV(state, tracks);
@@ -133,13 +181,19 @@ async function exportProject() {
           "Export completed successfully! Your audio file has been downloaded."
         );
       }
+      Logger.info("Project exported to WAV successfully");
     }
 
     // Restore button
     exportBtn.innerHTML = originalText;
     exportBtn.disabled = false;
   } catch (error) {
-    console.error("Export failed:", error);
+    Logger.error(
+      Logger.ERROR_CODES.EXPORT_FAILED,
+      `Export failed: ${error.message}`,
+      {},
+      error
+    );
     if (window.toast) {
       window.toast.error(
         "Export Failed",
@@ -169,8 +223,79 @@ function clearAllData() {
     if (window.toast) {
       window.toast.warning("Data Cleared", "All tracks have been reset");
     }
+    Logger.info("All data cleared and reset");
   }
 }
+
+/**
+ * BeatForge Application Namespace
+ * Provides organized access to all public API functions
+ * Prevents global scope pollution
+ */
+const BeatForge = {
+  // Version and metadata
+  VERSION: "1.0.0",
+  NAME: "BeatForge Studio",
+
+  // UI Functions
+  UI: {
+    openPianoRoll,
+    closePianoRoll,
+    showShortcuts,
+    closeShortcuts,
+    renderUI,
+  },
+
+  // Project Functions
+  Project: {
+    exportProject,
+    clearAllData,
+    loadState,
+    getState,
+    getTracks,
+  },
+
+  // Initialization
+  initialize: initializeApp,
+  isInitialized: () => getAudioContext() !== null,
+
+  // Logger access for debugging
+  logger: Logger,
+
+  // Helper function to get API documentation
+  help: function () {
+    console.log(
+      "%c BeatForge Studio API Documentation",
+      "color: #4CAF50; font-size: 16px; font-weight: bold;"
+    );
+    console.log(
+      "%cUI Functions:%c\n" +
+        "  BeatForge.UI.openPianoRoll() - Open piano roll editor\n" +
+        "  BeatForge.UI.closePianoRoll() - Close piano roll editor\n" +
+        "  BeatForge.UI.showShortcuts() - Show keyboard shortcuts\n" +
+        "  BeatForge.UI.closeShortcuts() - Close shortcuts overlay\n" +
+        "  BeatForge.UI.renderUI() - Re-render the UI",
+      "color: #2196F3; font-weight: bold;",
+      "color: inherit;"
+    );
+    console.log(
+      "%cProject Functions:%c\n" +
+        "  BeatForge.Project.exportProject() - Export current project\n" +
+        "  BeatForge.Project.clearAllData() - Clear all data\n" +
+        "  BeatForge.Project.getState() - Get application state\n" +
+        "  BeatForge.Project.getTracks() - Get current tracks",
+      "color: #2196F3; font-weight: bold;",
+      "color: inherit;"
+    );
+    console.log(
+      "%cInitialization:%c\n" +
+        "  BeatForge.initialize() - Initialize the application\n" +
+        "  BeatForge.isInitialized() - Check if initialized",
+      "color: #2196F3; font-weight: bold;",
+      "color: inherit;"
+    );
+  },
+};
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
@@ -183,8 +308,14 @@ document.addEventListener("DOMContentLoaded", () => {
     initMobileMenu();
     initActionsMenu();
     initVisualizerMode();
+    Logger.info("UI enhancements initialized");
   } catch (error) {
-    console.error("UI enhancements initialization failed:", error);
+    Logger.error(
+      Logger.ERROR_CODES.UI_INITIALIZATION_FAILED,
+      `UI enhancements initialization failed: ${error.message}`,
+      {},
+      error
+    );
   }
 
   // Initialize app
@@ -198,8 +329,12 @@ document
   .getElementById("initAudioBtn")
   .addEventListener("click", initializeApp);
 
-// --- EXPOSE FUNCTIONS TO GLOBAL SCOPE FOR HTML INLINE HANDLERS ---
-// Only expose functions that are called from HTML inline handlers
+// --- EXPOSE NAMESPACE TO GLOBAL SCOPE ---
+// Only expose the BeatForge namespace to prevent pollution
+window.BeatForge = BeatForge;
+
+// For backward compatibility with existing HTML inline handlers
+// These will be updated in a future step
 window.openPianoRoll = openPianoRoll;
 window.closePianoRoll = closePianoRoll;
 window.showShortcuts = showShortcuts;

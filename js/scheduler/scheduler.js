@@ -6,21 +6,26 @@
  * - Audio scheduling loop runs on setTimeout (25ms interval) for precise, high-frequency timing
  * - Visual updates run on requestAnimationFrame (~60fps) for smooth UI updates
  * - These loops are independent to prevent visual rendering from blocking audio scheduling
+ * - Uses CircularBuffer for memory-efficient note queue management
  */
 
 import { STEP_COUNT } from "../constants.js";
 import { getState, getTracks } from "../state/stateManager.js";
 import { playDrum, playSynth, getAudioContext } from "../audio/audioEngine.js";
+import { CircularBuffer } from "../utils/circularBuffer.js";
+import { Logger } from "../utils/logger.js";
+import { SCHEDULER_CONFIG } from "../config/audioConfig.js";
 
 // Audio scheduling configuration
-// Increased lookahead to handle browser throttling when tab is inactive
-let scheduleAheadTime = 0.5; // Schedule audio 500ms ahead (prevents dropouts during throttling)
-let lookaheadInterval = 25; // Check every 25ms (more frequent than frame rate)
-let minLookaheadInterval = 25; // Minimum interval when page is visible
-let maxLookaheadInterval = 100; // Maximum interval when page might be throttled
+let scheduleAheadTime = SCHEDULER_CONFIG.SCHEDULE_AHEAD_TIME;
+let lookaheadInterval = SCHEDULER_CONFIG.LOOKAHEAD_INTERVAL;
+let minLookaheadInterval = SCHEDULER_CONFIG.MIN_LOOKAHEAD_INTERVAL;
+let maxLookaheadInterval = SCHEDULER_CONFIG.MAX_LOOKAHEAD_INTERVAL;
 
-// State tracking
-let noteQueue = [];
+// State tracking with CircularBuffer for memory efficiency
+let noteQueue = new CircularBuffer(
+  SCHEDULER_CONFIG.CIRCULAR_BUFFER_SIZE || 1000
+);
 let lastDrawStep = -1;
 let schedulerTimeoutId = null; // Track the scheduler timeout for cleanup
 let lastSchedulerTime = 0; // Track last scheduler execution time for adaptive scheduling
@@ -98,31 +103,50 @@ function scheduler() {
   // Stop if not playing
   if (!state.isPlaying) return;
 
-  const audioCtx = getAudioContext();
-  const currentTime = performance.now();
+  try {
+    const audioCtx = getAudioContext();
+    const currentTime = performance.now();
 
-  // Detect if browser is throttling setTimeout
-  // If more than 100ms has passed since last call, we're being throttled
-  const timeSinceLastCall =
-    lastSchedulerTime > 0 ? currentTime - lastSchedulerTime : 0;
-  const isThrottled = timeSinceLastCall > 100;
+    // Detect if browser is throttling setTimeout
+    // If more than 100ms has passed since last call, we're being throttled
+    const timeSinceLastCall =
+      lastSchedulerTime > 0 ? currentTime - lastSchedulerTime : 0;
+    const isThrottled =
+      timeSinceLastCall > SCHEDULER_CONFIG.THROTTLE_DETECTION_THRESHOLD;
 
-  // Adaptive interval: use longer interval if being throttled
-  const adaptiveInterval = isThrottled
-    ? maxLookaheadInterval
-    : minLookaheadInterval;
+    // Adaptive interval: use longer interval if being throttled
+    const adaptiveInterval = isThrottled
+      ? maxLookaheadInterval
+      : minLookaheadInterval;
 
-  lastSchedulerTime = currentTime;
+    lastSchedulerTime = currentTime;
 
-  // Schedule all notes that fall within the lookahead window
-  while (state.nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
-    scheduleNote(state.currentStep, state.nextNoteTime);
-    nextNote();
+    // Schedule all notes that fall within the lookahead window
+    while (state.nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+      scheduleNote(state.currentStep, state.nextNoteTime);
+      nextNote();
+    }
+
+    // Log buffer statistics if in debug mode
+    if (noteQueue.getSize() > noteQueue.getCapacity() * 0.8) {
+      Logger.warn(
+        Logger.WARNING_CODES.HIGH_CPU_USAGE,
+        "Note queue buffer nearing capacity",
+        noteQueue.getStats()
+      );
+    }
+
+    // Schedule next scheduler iteration using setTimeout for precise timing
+    // This runs independently of the visual update loop
+    schedulerTimeoutId = setTimeout(scheduler, adaptiveInterval);
+  } catch (error) {
+    Logger.error(
+      Logger.ERROR_CODES.SCHEDULING_FAILED,
+      `Scheduler error: ${error.message}`,
+      {},
+      error
+    );
   }
-
-  // Schedule next scheduler iteration using setTimeout for precise timing
-  // This runs independently of the visual update loop
-  schedulerTimeoutId = setTimeout(scheduler, adaptiveInterval);
 }
 
 /**
@@ -136,28 +160,43 @@ function updateVisuals() {
   // Stop visual updates if not playing
   if (!state.isPlaying) return;
 
-  const audioCtx = getAudioContext();
-  const currentTime = audioCtx.currentTime;
-  let currentStepIndex = -1;
+  try {
+    const audioCtx = getAudioContext();
+    const currentTime = audioCtx.currentTime;
+    let currentStepIndex = -1;
 
-  // Process note queue to find current step
-  while (noteQueue.length && noteQueue[0].time < currentTime) {
-    currentStepIndex = noteQueue[0].note;
-    noteQueue.shift();
+    // Process note queue to find current step
+    while (!noteQueue.isEmpty()) {
+      const note = noteQueue.peek();
+      if (note && note.time < currentTime) {
+        currentStepIndex = note.note;
+        noteQueue.shift();
+      } else {
+        break;
+      }
+    }
+
+    // Update visual indicators only when step changes
+    if (currentStepIndex !== -1 && currentStepIndex !== lastDrawStep) {
+      lastDrawStep = currentStepIndex;
+      document.querySelectorAll(".grid-col").forEach((col, idx) => {
+        if (idx === currentStepIndex)
+          col.classList.add("bg-gray-800", "border-t-2", "border-blue-500");
+        else
+          col.classList.remove("bg-gray-800", "border-t-2", "border-blue-500");
+      });
+    }
+
+    // Continue visual updates on next animation frame
+    requestAnimationFrame(updateVisuals);
+  } catch (error) {
+    Logger.error(
+      Logger.ERROR_CODES.SCHEDULING_FAILED,
+      `Visual update error: ${error.message}`,
+      {},
+      error
+    );
   }
-
-  // Update visual indicators only when step changes
-  if (currentStepIndex !== -1 && currentStepIndex !== lastDrawStep) {
-    lastDrawStep = currentStepIndex;
-    document.querySelectorAll(".grid-col").forEach((col, idx) => {
-      if (idx === currentStepIndex)
-        col.classList.add("bg-gray-800", "border-t-2", "border-blue-500");
-      else col.classList.remove("bg-gray-800", "border-t-2", "border-blue-500");
-    });
-  }
-
-  // Continue visual updates on next animation frame
-  requestAnimationFrame(updateVisuals);
 }
 
 /**
@@ -187,7 +226,7 @@ function stopScheduler() {
  * Reset note queue
  */
 function resetNoteQueue() {
-  noteQueue = [];
+  noteQueue.clear();
   lastDrawStep = -1;
 }
 

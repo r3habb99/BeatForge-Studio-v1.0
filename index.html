@@ -219,15 +219,15 @@
                         <div class="actions-menu-divider"></div>
 
                         <!-- Export -->
-                        <button id="exportBtn" onclick="exportProject()" aria-label="Export Recording" disabled
-                            class="actions-menu-item">
+                        <button id="exportBtn" onclick="BeatForge.Project.exportProject()" aria-label="Export Recording"
+                            disabled class="actions-menu-item">
                             <i class="fas fa-download mr-2"></i>
                             <span>Export Recording</span>
                         </button>
 
                         <!-- Clear All -->
-                        <button id="clearBtn" onclick="clearAllData()" aria-label="Clear all notes and reset"
-                            class="actions-menu-item">
+                        <button id="clearBtn" onclick="BeatForge.Project.clearAllData()"
+                            aria-label="Clear all notes and reset" class="actions-menu-item">
                             <i class="fas fa-trash mr-2"></i>
                             <span>Clear All</span>
                         </button>
@@ -427,7 +427,7 @@
         <div class="bg-gray-900 rounded-lg p-6 max-w-md border border-gray-700">
             <div class="flex justify-between items-center mb-4">
                 <h2 id="shortcutsTitle" class="text-white font-bold text-lg">Keyboard Shortcuts</h2>
-                <button onclick="closeShortcuts()" aria-label="Close shortcuts help"
+                <button onclick="BeatForge.UI.closeShortcuts()" aria-label="Close shortcuts help"
                     class="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white">
                     <i class="fas fa-times" aria-hidden="true"></i>
                 </button>
@@ -462,7 +462,7 @@
         aria-labelledby="pianoRollTitle">
         <div class="h-12 bg-gray-800 flex items-center justify-between px-4 border-b border-gray-700">
             <h2 id="pianoRollTitle" class="text-white font-bold">Piano Roll</h2>
-            <button onclick="closePianoRoll()" aria-label="Close piano roll (ESC)"
+            <button onclick="BeatForge.UI.closePianoRoll()" aria-label="Close piano roll (ESC)"
                 class="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white">
                 <i class="fas fa-times text-xl" aria-hidden="true"></i>
             </button>

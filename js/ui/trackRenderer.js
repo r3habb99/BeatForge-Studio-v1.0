@@ -1,6 +1,7 @@
 /**
  * Track Renderer Module
  * Handles rendering of track UI elements
+ * Refactored: Added logging, debouncing, and optimizations
  */
 
 import { STEP_COUNT } from "../constants.js";
@@ -11,59 +12,84 @@ import {
   toggleMute,
   toggleSolo,
 } from "./trackControls.js";
+import { Logger } from "../utils/logger.js";
+import { debounce, rafDebounce } from "../utils/debounce.js";
 
 let isInitialRender = true;
 
+// Debounced re-render function for performance
+const debouncedRender = debounce((callback) => {
+  callback();
+}, 100);
+
 /**
- * Highlight track header
+ * Highlight track header with logging
  */
 function highlightTrackHeader(trackId) {
-  const headerContainer = document.getElementById("trackHeaders");
-  const headers = headerContainer.querySelectorAll(".track-header-item");
-
-  // Remove previous highlights
-  headers.forEach((h) => {
-    h.classList.remove(
-      "ring-2",
-      "ring-blue-500",
-      "ring-offset-2",
-      "ring-offset-gray-900"
-    );
-  });
-
-  // Add highlight to selected track
-  const targetHeader = headerContainer.querySelector(
-    `[data-track-id="${trackId}"]`
-  );
-  if (targetHeader) {
-    targetHeader.classList.add(
-      "ring-2",
-      "ring-blue-500",
-      "ring-offset-2",
-      "ring-offset-gray-900"
-    );
-
-    // Auto-scroll to the track header if it's not visible
-    const container = headerContainer.parentElement; // The scrollable container
-    const headerTop = targetHeader.offsetTop;
-    const headerBottom = headerTop + targetHeader.offsetHeight;
-    const containerScrollTop = container.scrollTop;
-    const containerHeight = container.clientHeight;
-
-    // Check if header is above visible area
-    if (headerTop < containerScrollTop) {
-      container.scrollTo({
-        top: headerTop - 10,
-        behavior: "smooth",
-      });
+  try {
+    const headerContainer = document.getElementById("trackHeaders");
+    if (!headerContainer) {
+      Logger.warn("Track headers container not found");
+      return;
     }
-    // Check if header is below visible area
-    else if (headerBottom > containerScrollTop + containerHeight) {
-      container.scrollTo({
-        top: headerBottom - containerHeight + 10,
-        behavior: "smooth",
-      });
+
+    const headers = headerContainer.querySelectorAll(".track-header-item");
+
+    // Remove previous highlights
+    headers.forEach((h) => {
+      h.classList.remove(
+        "ring-2",
+        "ring-blue-500",
+        "ring-offset-2",
+        "ring-offset-gray-900"
+      );
+    });
+
+    // Add highlight to selected track
+    const targetHeader = headerContainer.querySelector(
+      `[data-track-id="${trackId}"]`
+    );
+    if (targetHeader) {
+      targetHeader.classList.add(
+        "ring-2",
+        "ring-blue-500",
+        "ring-offset-2",
+        "ring-offset-gray-900"
+      );
+
+      // Auto-scroll to the track header if it's not visible
+      const container = headerContainer.parentElement; // The scrollable container
+      const headerTop = targetHeader.offsetTop;
+      const headerBottom = headerTop + targetHeader.offsetHeight;
+      const containerScrollTop = container.scrollTop;
+      const containerHeight = container.clientHeight;
+
+      // Check if header is above visible area
+      if (headerTop < containerScrollTop) {
+        container.scrollTo({
+          top: headerTop - 10,
+          behavior: "smooth",
+        });
+        Logger.debug(`Scrolled track header ${trackId} into view (above)`);
+      }
+      // Check if header is below visible area
+      else if (headerBottom > containerScrollTop + containerHeight) {
+        container.scrollTo({
+          top: headerBottom - containerHeight + 10,
+          behavior: "smooth",
+        });
+        Logger.debug(`Scrolled track header ${trackId} into view (below)`);
+      }
+    } else {
+      Logger.warn(`Track header not found for track ${trackId}`);
     }
+  } catch (error) {
+    Logger.error(
+      Logger.ERROR_CODES.UI_INITIALIZATION_FAILED,
+      `Error highlighting track header: ${error.message}`,
+      { trackId },
+      error
+    );
   }
 }
 
@@ -75,43 +101,63 @@ function isMobileView() {
 }
 
 /**
- * Render all tracks UI
+ * Render all tracks UI with performance optimization
  */
 function renderTracksUI(openPianoRollCallback) {
-  const headerContainer = document.getElementById("trackHeaders");
-  const gridContainer = document.getElementById("gridCanvas");
+  try {
+    const headerContainer = document.getElementById("trackHeaders");
+    const gridContainer = document.getElementById("gridCanvas");
 
-  // Clear containers on initial render
-  if (isInitialRender) {
-    headerContainer.innerHTML = "";
-    gridContainer.innerHTML = "";
-    isInitialRender = false;
-  }
+    if (!headerContainer || !gridContainer) {
+      Logger.warn("Track renderer containers not found");
+      return;
+    }
 
-  const tracks = getTracks();
+    // Clear containers on initial render
+    if (isInitialRender) {
+      headerContainer.innerHTML = "";
+      gridContainer.innerHTML = "";
+      isInitialRender = false;
+      Logger.debug("Initial track UI render");
+    }
 
-  // Check if mobile view
-  const mobile = isMobileView();
+    const tracks = getTracks();
+    Logger.debug(`Rendering ${tracks.length} tracks`);
 
-  if (mobile) {
-    // Mobile: Integrated track + sequencer layout
-    renderMobileTracks(tracks, headerContainer, openPianoRollCallback);
-    // Hide desktop sequencer grid on mobile
-    gridContainer.style.display = "none";
-  } else {
-    // Desktop: Separate track headers and sequencer grid
-    renderDesktopTracks(
-      tracks,
-      headerContainer,
-      gridContainer,
-      openPianoRollCallback
+    // Check if mobile view
+    const mobile = isMobileView();
+
+    if (mobile) {
+      // Mobile: Integrated track + sequencer layout
+      renderMobileTracks(tracks, headerContainer, openPianoRollCallback);
+      // Hide desktop sequencer grid on mobile
+      gridContainer.style.display = "none";
+      Logger.debug("Switched to mobile track layout");
+    } else {
+      // Desktop: Separate track headers and sequencer grid
+      renderDesktopTracks(
+        tracks,
+        headerContainer,
+        gridContainer,
+        openPianoRollCallback
+      );
+      gridContainer.style.display = "block";
+      Logger.debug("Switched to desktop track layout");
+    }
+
+    Logger.info(`Track UI rendered successfully for ${tracks.length} tracks`);
+  } catch (error) {
+    Logger.error(
+      Logger.ERROR_CODES.UI_INITIALIZATION_FAILED,
+      `Error rendering tracks UI: ${error.message}`,
+      {},
+      error
     );
-    gridContainer.style.display = "block";
   }
 }
 
 /**
- * Render desktop tracks (original layout)
+ * Render desktop tracks (original layout) with optimizations
  */
 function renderDesktopTracks(
   tracks,
@@ -119,26 +165,33 @@ function renderDesktopTracks(
   gridContainer,
   openPianoRollCallback
 ) {
-  tracks.forEach((track, trackIndex) => {
-    // Render track header
-    let hDiv = headerContainer.children[trackIndex];
-    const needsCreate = !hDiv;
+  try {
+    Logger.debug(
+      `Rendering ${tracks.length} desktop track headers and sequencer grid`
+    );
+    let renderedCount = 0;
 
-    if (needsCreate) {
-      hDiv = document.createElement("div");
-      hDiv.dataset.trackId = track.id;
-      headerContainer.appendChild(hDiv);
-    }
+    tracks.forEach((track, trackIndex) => {
+      // Render track header
+      let hDiv = headerContainer.children[trackIndex];
+      const needsCreate = !hDiv;
 
-    // Update classes
-    hDiv.className = `track-header-item border-b border-gray-800 p-3 flex flex-col justify-between bg-gradient-to-r from-[#1a1a1a] to-[#222] relative`;
-    if (track.solo) hDiv.classList.add("border-l-4", "border-yellow-400");
-    else
-      hDiv.classList.add("border-l-4", track.color.replace("bg-", "border-"));
+      if (needsCreate) {
+        hDiv = document.createElement("div");
+        hDiv.dataset.trackId = track.id;
+        headerContainer.appendChild(hDiv);
+        renderedCount++;
+      }
 
-    // Only update innerHTML if creating new element or if we need to force update
-    if (needsCreate || !hDiv.hasAttribute("data-rendered")) {
-      hDiv.innerHTML = `
+      // Update classes
+      hDiv.className = `track-header-item border-b border-gray-800 p-3 flex flex-col justify-between bg-gradient-to-r from-[#1a1a1a] to-[#222] relative`;
+      if (track.solo) hDiv.classList.add("border-l-4", "border-yellow-400");
+      else
+        hDiv.classList.add("border-l-4", track.color.replace("bg-", "border-"));
+
+      // Only update innerHTML if creating new element or if we need to force update
+      if (needsCreate || !hDiv.hasAttribute("data-rendered")) {
+        hDiv.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
                     <span class="font-bold text-sm truncate flex-1 mr-2">${
                       track.name
@@ -198,183 +251,201 @@ function renderDesktopTracks(
                     }
                 </div>
             `;
-      hDiv.setAttribute("data-rendered", "true");
+        hDiv.setAttribute("data-rendered", "true");
 
-      // Attach event listeners
-      const muteBtn = hDiv.querySelector(".mute-btn");
-      const soloBtn = hDiv.querySelector(".solo-btn");
-      const volSlider = hDiv.querySelector(".vol-slider");
-      const revSlider = hDiv.querySelector(".rev-slider");
-      const delSlider = hDiv.querySelector(".del-slider");
-      const distSlider = hDiv.querySelector(".dist-slider");
-      const editBtn = hDiv.querySelector(".edit-notes-btn");
+        // Attach event listeners
+        const muteBtn = hDiv.querySelector(".mute-btn");
+        const soloBtn = hDiv.querySelector(".solo-btn");
+        const volSlider = hDiv.querySelector(".vol-slider");
+        const revSlider = hDiv.querySelector(".rev-slider");
+        const delSlider = hDiv.querySelector(".del-slider");
+        const distSlider = hDiv.querySelector(".dist-slider");
+        const editBtn = hDiv.querySelector(".edit-notes-btn");
 
-      if (muteBtn) {
-        muteBtn.addEventListener("click", () => {
-          toggleMute(track.id);
-          highlightTrackHeader(track.id);
-          renderTracksUI(openPianoRollCallback);
-        });
-      }
-
-      if (soloBtn) {
-        soloBtn.addEventListener("click", () => {
-          toggleSolo(track.id);
-          highlightTrackHeader(track.id);
-          renderTracksUI(openPianoRollCallback);
-        });
-      }
-
-      if (volSlider) {
-        volSlider.addEventListener("input", (e) => {
-          updateTrackParam(track.id, "vol", e.target.value);
-        });
-      }
-
-      if (revSlider) {
-        revSlider.addEventListener("input", (e) => {
-          updateTrackParam(track.id, "rev", e.target.value);
-        });
-      }
-
-      if (delSlider) {
-        delSlider.addEventListener("input", (e) => {
-          updateTrackParam(track.id, "del", e.target.value);
-        });
-      }
-
-      if (distSlider) {
-        distSlider.addEventListener("input", (e) => {
-          updateTrackParam(track.id, "distortion", e.target.value);
-        });
-      }
-
-      if (editBtn) {
-        editBtn.addEventListener("click", () => {
-          openPianoRollCallback(track.id);
-        });
-      }
-    } else {
-      // Just update button states without re-rendering
-      const muteBtn = hDiv.querySelector(".mute-btn");
-      const soloBtn = hDiv.querySelector(".solo-btn");
-
-      if (muteBtn) {
-        muteBtn.className = `mute-btn text-xs w-6 h-6 rounded ${
-          track.mute ? "bg-red-600 text-white" : "bg-gray-700 text-gray-400"
-        }`;
-      }
-      if (soloBtn) {
-        soloBtn.className = `solo-btn text-xs w-6 h-6 rounded ${
-          track.solo ? "bg-yellow-500 text-black" : "bg-gray-700 text-gray-400"
-        }`;
-      }
-    }
-
-    let rowDiv = gridContainer.children[trackIndex];
-
-    if (!rowDiv) {
-      rowDiv = document.createElement("div");
-      rowDiv.dataset.trackId = track.id;
-      gridContainer.appendChild(rowDiv);
-    }
-
-    rowDiv.className = "track-row flex w-full";
-
-    // Add click handler to highlight track when clicking anywhere on the row
-    rowDiv.onclick = (e) => {
-      // Only highlight if clicking on the row itself or cells, not if event is from button
-      if (!e.target.classList.contains("step-btn")) {
-        highlightTrackHeader(track.id);
-      }
-    };
-
-    for (let i = 0; i < STEP_COUNT; i++) {
-      let cell = rowDiv.children[i];
-
-      if (!cell) {
-        cell = document.createElement("div");
-        rowDiv.appendChild(cell);
-      }
-
-      cell.className = `grid-col border-r border-b border-gray-800 flex items-center justify-center relative transition-colors`;
-      if (i % 4 === 0) cell.classList.add("border-l", "border-l-gray-700");
-
-      // Add step number data attribute
-      cell.dataset.stepNumber = i + 1;
-
-      if (track.type === "drum") {
-        let btn = cell.querySelector(".step-btn");
-        if (!btn) {
-          btn = document.createElement("button");
-          btn.onclick = (e) => {
-            e.stopPropagation(); // Prevent row click
-            toggleStep(track.id, i);
+        if (muteBtn) {
+          muteBtn.addEventListener("click", () => {
+            toggleMute(track.id);
             highlightTrackHeader(track.id);
-            // Re-render after toggle
             renderTracksUI(openPianoRollCallback);
-          };
-          btn.setAttribute("aria-label", `Step ${i + 1}`);
-          cell.innerHTML = "";
-          cell.appendChild(btn);
+          });
         }
-        btn.className = `step-btn w-10 h-10 md:w-12 md:h-12 rounded-sm transition-all ${
-          track.steps[i] ? track.color : "bg-gray-800"
-        }`;
 
-        // Add step number label
-        let stepLabel = btn.querySelector(".step-number");
-        if (!stepLabel) {
-          stepLabel = document.createElement("span");
-          stepLabel.className = "step-number";
-          stepLabel.textContent = i + 1;
-          btn.appendChild(stepLabel);
+        if (soloBtn) {
+          soloBtn.addEventListener("click", () => {
+            toggleSolo(track.id);
+            highlightTrackHeader(track.id);
+            renderTracksUI(openPianoRollCallback);
+          });
+        }
+
+        if (volSlider) {
+          volSlider.addEventListener("input", (e) => {
+            updateTrackParam(track.id, "vol", e.target.value);
+          });
+        }
+
+        if (revSlider) {
+          revSlider.addEventListener("input", (e) => {
+            updateTrackParam(track.id, "rev", e.target.value);
+          });
+        }
+
+        if (delSlider) {
+          delSlider.addEventListener("input", (e) => {
+            updateTrackParam(track.id, "del", e.target.value);
+          });
+        }
+
+        if (distSlider) {
+          distSlider.addEventListener("input", (e) => {
+            updateTrackParam(track.id, "distortion", e.target.value);
+          });
+        }
+
+        if (editBtn) {
+          editBtn.addEventListener("click", () => {
+            openPianoRollCallback(track.id);
+          });
         }
       } else {
-        const notesHere = track.notes.filter((n) => n.step === i);
-        if (notesHere.length > 0) {
-          cell.innerHTML = `<div class="${
-            track.color
-          } w-full h-5 md:h-6 rounded-sm text-[9px] md:text-[10px] flex items-center justify-center text-white font-bold shadow-lg opacity-90 relative">
+        // Just update button states without re-rendering
+        const muteBtn = hDiv.querySelector(".mute-btn");
+        const soloBtn = hDiv.querySelector(".solo-btn");
+
+        if (muteBtn) {
+          muteBtn.className = `mute-btn text-xs w-6 h-6 rounded ${
+            track.mute ? "bg-red-600 text-white" : "bg-gray-700 text-gray-400"
+          }`;
+        }
+        if (soloBtn) {
+          soloBtn.className = `solo-btn text-xs w-6 h-6 rounded ${
+            track.solo
+              ? "bg-yellow-500 text-black"
+              : "bg-gray-700 text-gray-400"
+          }`;
+        }
+      }
+
+      let rowDiv = gridContainer.children[trackIndex];
+
+      if (!rowDiv) {
+        rowDiv = document.createElement("div");
+        rowDiv.dataset.trackId = track.id;
+        gridContainer.appendChild(rowDiv);
+      }
+
+      rowDiv.className = "track-row flex w-full";
+
+      // Add click handler to highlight track when clicking anywhere on the row
+      rowDiv.onclick = (e) => {
+        // Only highlight if clicking on the row itself or cells, not if event is from button
+        if (!e.target.classList.contains("step-btn")) {
+          highlightTrackHeader(track.id);
+        }
+      };
+
+      for (let i = 0; i < STEP_COUNT; i++) {
+        let cell = rowDiv.children[i];
+
+        if (!cell) {
+          cell = document.createElement("div");
+          rowDiv.appendChild(cell);
+        }
+
+        cell.className = `grid-col border-r border-b border-gray-800 flex items-center justify-center relative transition-colors`;
+        if (i % 4 === 0) cell.classList.add("border-l", "border-l-gray-700");
+
+        // Add step number data attribute
+        cell.dataset.stepNumber = i + 1;
+
+        if (track.type === "drum") {
+          let btn = cell.querySelector(".step-btn");
+          if (!btn) {
+            btn = document.createElement("button");
+            btn.onclick = (e) => {
+              e.stopPropagation(); // Prevent row click
+              toggleStep(track.id, i);
+              highlightTrackHeader(track.id);
+              // Re-render after toggle
+              renderTracksUI(openPianoRollCallback);
+            };
+            btn.setAttribute("aria-label", `Step ${i + 1}`);
+            cell.innerHTML = "";
+            cell.appendChild(btn);
+          }
+          btn.className = `step-btn w-10 h-10 md:w-12 md:h-12 rounded-sm transition-all ${
+            track.steps[i] ? track.color : "bg-gray-800"
+          }`;
+
+          // Add step number label
+          let stepLabel = btn.querySelector(".step-number");
+          if (!stepLabel) {
+            stepLabel = document.createElement("span");
+            stepLabel.className = "step-number";
+            stepLabel.textContent = i + 1;
+            btn.appendChild(stepLabel);
+          }
+        } else {
+          const notesHere = track.notes.filter((n) => n.step === i);
+          if (notesHere.length > 0) {
+            cell.innerHTML = `<div class="${
+              track.color
+            } w-full h-5 md:h-6 rounded-sm text-[9px] md:text-[10px] flex items-center justify-center text-white font-bold shadow-lg opacity-90 relative">
             <span class="step-number step-number-with-note">${i + 1}</span>
             <span class="note-text">${notesHere[0].note}</span>
           </div>`;
-        } else {
-          cell.innerHTML = `<span class="step-number">${i + 1}</span>`;
+          } else {
+            cell.innerHTML = `<span class="step-number">${i + 1}</span>`;
+          }
+          cell.onclick = (e) => {
+            e.stopPropagation(); // Prevent row click
+            highlightTrackHeader(track.id);
+            openPianoRollCallback(track.id);
+          };
+          cell.style.cursor = "pointer";
+          cell.setAttribute(
+            "aria-label",
+            `Step ${i + 1} - Click to edit notes`
+          );
         }
-        cell.onclick = (e) => {
-          e.stopPropagation(); // Prevent row click
-          highlightTrackHeader(track.id);
-          openPianoRollCallback(track.id);
-        };
-        cell.style.cursor = "pointer";
-        cell.setAttribute("aria-label", `Step ${i + 1} - Click to edit notes`);
       }
-    }
-  });
+    });
+
+    Logger.debug("Desktop track rendering complete");
+  } catch (error) {
+    Logger.error(
+      Logger.ERROR_CODES.UI_INITIALIZATION_FAILED,
+      `Error rendering desktop tracks: ${error.message}`,
+      {},
+      error
+    );
+  }
 }
 
 /**
  * Render mobile tracks (integrated layout with inline sequencer)
  */
 function renderMobileTracks(tracks, headerContainer, openPianoRollCallback) {
-  // Clear existing content
-  headerContainer.innerHTML = "";
+  try {
+    Logger.debug(`Rendering ${tracks.length} mobile track rows`);
 
-  tracks.forEach((track, trackIndex) => {
-    // Create track row container
-    const trackRow = document.createElement("div");
-    trackRow.dataset.trackId = track.id;
-    trackRow.className = `mobile-track-row ${track.color.replace(
-      "bg-",
-      "border-l-"
-    )}`;
-    if (track.solo) trackRow.classList.add("border-l-yellow-400");
+    // Clear existing content
+    headerContainer.innerHTML = "";
 
-    // Track header section (left side)
-    const trackHeader = document.createElement("div");
-    trackHeader.className = "mobile-track-header";
-    trackHeader.innerHTML = `
+    tracks.forEach((track, trackIndex) => {
+      // Create track row container
+      const trackRow = document.createElement("div");
+      trackRow.dataset.trackId = track.id;
+      trackRow.className = `mobile-track-row ${track.color.replace(
+        "bg-",
+        "border-l-"
+      )}`;
+      if (track.solo) trackRow.classList.add("border-l-yellow-400");
+
+      // Track header section (left side)
+      const trackHeader = document.createElement("div");
+      trackHeader.className = "mobile-track-header";
+      trackHeader.innerHTML = `
             <div class="mobile-track-name" data-track-id="${track.id}">
                 <span class="track-name-text">${track.name}</span>
             </div>
@@ -392,98 +463,108 @@ function renderMobileTracks(tracks, headerContainer, openPianoRollCallback) {
             </div>
         `;
 
-    // Sequencer section (right side)
-    const sequencerSection = document.createElement("div");
-    sequencerSection.className = "mobile-sequencer-section";
+      // Sequencer section (right side)
+      const sequencerSection = document.createElement("div");
+      sequencerSection.className = "mobile-sequencer-section";
 
-    // Create step buttons
-    for (let i = 0; i < STEP_COUNT; i++) {
-      const stepBtn = document.createElement("button");
-      stepBtn.className = `mobile-step-btn ${
-        track.type === "drum" && track.steps[i] ? track.color : ""
-      }`;
-      stepBtn.dataset.trackId = track.id;
-      stepBtn.dataset.step = i;
-      stepBtn.dataset.stepNumber = i + 1;
-      stepBtn.setAttribute("aria-label", `Step ${i + 1}`);
+      // Create step buttons
+      for (let i = 0; i < STEP_COUNT; i++) {
+        const stepBtn = document.createElement("button");
+        stepBtn.className = `mobile-step-btn ${
+          track.type === "drum" && track.steps[i] ? track.color : ""
+        }`;
+        stepBtn.dataset.trackId = track.id;
+        stepBtn.dataset.step = i;
+        stepBtn.dataset.stepNumber = i + 1;
+        stepBtn.setAttribute("aria-label", `Step ${i + 1}`);
 
-      // For synth tracks, check if there are notes
-      const notesHere =
-        track.type === "synth" ? track.notes.filter((n) => n.step === i) : [];
-      const hasNote = notesHere.length > 0;
+        // For synth tracks, check if there are notes
+        const notesHere =
+          track.type === "synth" ? track.notes.filter((n) => n.step === i) : [];
+        const hasNote = notesHere.length > 0;
 
-      // Add step number label
-      const stepLabel = document.createElement("span");
-      stepLabel.className = hasNote
-        ? "step-number step-number-with-note"
-        : "step-number";
-      stepLabel.textContent = i + 1;
-      stepBtn.appendChild(stepLabel);
+        // Add step number label
+        const stepLabel = document.createElement("span");
+        stepLabel.className = hasNote
+          ? "step-number step-number-with-note"
+          : "step-number";
+        stepLabel.textContent = i + 1;
+        stepBtn.appendChild(stepLabel);
 
-      // For synth tracks, show note indicator
-      if (track.type === "synth" && hasNote) {
-        stepBtn.classList.add(track.color);
-        const noteIndicator = document.createElement("span");
-        noteIndicator.className = "mobile-note-indicator";
-        noteIndicator.textContent = notesHere[0].note;
-        stepBtn.appendChild(noteIndicator);
+        // For synth tracks, show note indicator
+        if (track.type === "synth" && hasNote) {
+          stepBtn.classList.add(track.color);
+          const noteIndicator = document.createElement("span");
+          noteIndicator.className = "mobile-note-indicator";
+          noteIndicator.textContent = notesHere[0].note;
+          stepBtn.appendChild(noteIndicator);
+        }
+
+        sequencerSection.appendChild(stepBtn);
       }
 
-      sequencerSection.appendChild(stepBtn);
-    }
+      // Assemble track row
+      trackRow.appendChild(trackHeader);
+      trackRow.appendChild(sequencerSection);
+      headerContainer.appendChild(trackRow);
 
-    // Assemble track row
-    trackRow.appendChild(trackHeader);
-    trackRow.appendChild(sequencerSection);
-    headerContainer.appendChild(trackRow);
+      // Attach event listeners
+      const trackNameEl = trackHeader.querySelector(".mobile-track-name");
+      const muteBtn = trackHeader.querySelector(".mobile-mute-btn");
+      const soloBtn = trackHeader.querySelector(".mobile-solo-btn");
+      const stepBtns = sequencerSection.querySelectorAll(".mobile-step-btn");
 
-    // Attach event listeners
-    const trackNameEl = trackHeader.querySelector(".mobile-track-name");
-    const muteBtn = trackHeader.querySelector(".mobile-mute-btn");
-    const soloBtn = trackHeader.querySelector(".mobile-solo-btn");
-    const stepBtns = sequencerSection.querySelectorAll(".mobile-step-btn");
+      // Track name click - open bottom sheet (will implement in Phase 3)
+      trackNameEl.addEventListener("click", () => {
+        highlightTrackHeader(track.id);
+        // TODO: Open bottom sheet with full controls
+        console.log("Open bottom sheet for track:", track.id);
+      });
 
-    // Track name click - open bottom sheet (will implement in Phase 3)
-    trackNameEl.addEventListener("click", () => {
-      highlightTrackHeader(track.id);
-      // TODO: Open bottom sheet with full controls
-      console.log("Open bottom sheet for track:", track.id);
-    });
-
-    // Mute button
-    muteBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggleMute(track.id);
-      highlightTrackHeader(track.id);
-      renderTracksUI(openPianoRollCallback);
-    });
-
-    // Solo button
-    soloBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      toggleSolo(track.id);
-      highlightTrackHeader(track.id);
-      renderTracksUI(openPianoRollCallback);
-    });
-
-    // Step buttons
-    stepBtns.forEach((btn) => {
-      btn.addEventListener("click", (e) => {
+      // Mute button
+      muteBtn.addEventListener("click", (e) => {
         e.stopPropagation();
-        const step = parseInt(btn.dataset.step);
+        toggleMute(track.id);
+        highlightTrackHeader(track.id);
+        renderTracksUI(openPianoRollCallback);
+      });
 
-        if (track.type === "drum") {
-          toggleStep(track.id, step);
-          highlightTrackHeader(track.id);
-          renderTracksUI(openPianoRollCallback);
-        } else {
-          // For synth tracks, open piano roll
-          highlightTrackHeader(track.id);
-          openPianoRollCallback(track.id);
-        }
+      // Solo button
+      soloBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleSolo(track.id);
+        highlightTrackHeader(track.id);
+        renderTracksUI(openPianoRollCallback);
+      });
+
+      // Step buttons
+      stepBtns.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const step = parseInt(btn.dataset.step);
+
+          if (track.type === "drum") {
+            toggleStep(track.id, step);
+            highlightTrackHeader(track.id);
+            renderTracksUI(openPianoRollCallback);
+          } else {
+            // For synth tracks, open piano roll
+            highlightTrackHeader(track.id);
+            openPianoRollCallback(track.id);
+          }
+        });
       });
     });
-  });
+
+    Logger.debug("Mobile track rendering complete");
+  } catch (error) {
+    Logger.error(
+      Logger.ERROR_CODES.UI_INITIALIZATION_FAILED,
+      `Error rendering mobile tracks: ${error.message}`,
+      {},
+      error
+    );
+  }
 }
 
 // Handle window resize to switch between mobile and desktop layouts
@@ -498,7 +579,7 @@ window.addEventListener("resize", () => {
       lastViewMode = currentViewMode;
       isInitialRender = true; // Force full re-render
       // Re-render will be triggered by the app's render cycle
-      console.log(
+      Logger.debug(
         `View mode changed to: ${currentViewMode ? "mobile" : "desktop"}`
       );
     }
