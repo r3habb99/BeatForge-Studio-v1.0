@@ -18,9 +18,9 @@ import {
   playTambourine,
 } from "./sounds/index.js";
 
-import { DRUM_CONFIG } from "../config/audioConfig.js";
-import { Logger } from "../utils/logger.js";
-import { Validators } from "../utils/validators.js";
+import { DRUM_CONFIG } from "../../config/audioConfig.js";
+import { Logger } from "../../utils/logger.js";
+import { Validators } from "../../utils/validators.js";
 
 /**
  * Drum sound dispatcher with caching and validation

@@ -15,9 +15,9 @@ import {
   playReeseBass,
 } from "./types/index.js";
 
-import { SYNTH_CONFIG } from "../config/audioConfig.js";
-import { Logger } from "../utils/logger.js";
-import { Validators } from "../utils/validators.js";
+import { SYNTH_CONFIG } from "../../config/audioConfig.js";
+import { Logger } from "../../utils/logger.js";
+import { Validators } from "../../utils/validators.js";
 
 /**
  * Synth sound dispatcher with caching and validation

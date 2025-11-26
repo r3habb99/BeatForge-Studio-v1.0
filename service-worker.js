@@ -3,8 +3,8 @@
  * Provides offline capabilities and performance optimization
  */
 
-const CACHE_NAME = "beatforge-studio-v1.0.2";
-const RUNTIME_CACHE = "beatforge-runtime-v1.0.2";
+const CACHE_NAME = "beatforge-studio-v1.0.3";
+const RUNTIME_CACHE = "beatforge-runtime-v1.0.3";
 
 // Files to cache on install
 const STATIC_ASSETS = [
