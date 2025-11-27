@@ -20,6 +20,27 @@ const MODE_ICONS = {
   mirror: "fa-align-center",
 };
 
+// Visualizer colors
+const COLORS = {
+  cyan: "34, 211, 238",
+  blue: "59, 130, 246",
+  indigo: "99, 102, 241",
+  purple: "147, 51, 234",
+};
+
+// Visualizer dimensions and settings
+const VISUALIZER_CONFIG = {
+  barWidthMultiplier: 2.5,
+  barGap: 1,
+  minBarHeight: 1,
+  circularBars: 64,
+  circularPadding: 10,
+  lineWidth: 2,
+  circularLineWidth: 3,
+  shadowBlur: 15,
+  circularShadowBlur: 8,
+};
+
 let currentMode = MODES.BARS;
 let animationId = null;
 
@@ -110,11 +131,16 @@ function drawVisualizer() {
 function drawFrequencyBars(ctx, analyser, dataArray, canvas) {
   analyser.getByteFrequencyData(dataArray);
 
-  const barWidth = (canvas.width / dataArray.length) * 2.5;
+  const barWidth =
+    (canvas.width / dataArray.length) * VISUALIZER_CONFIG.barWidthMultiplier;
   let x = 0;
 
   for (let i = 0; i < dataArray.length; i++) {
-    const barHeight = dataArray[i] / 2;
+    const barHeight = Math.max(
+      dataArray[i] / 2,
+      VISUALIZER_CONFIG.minBarHeight
+    );
+    const intensity = barHeight / 128;
 
     // Create gradient for each bar
     const gradient = ctx.createLinearGradient(
@@ -123,24 +149,21 @@ function drawFrequencyBars(ctx, analyser, dataArray, canvas) {
       0,
       canvas.height
     );
-    const intensity = barHeight / 128;
 
-    gradient.addColorStop(0, `rgba(34, 211, 238, ${0.9 + intensity * 0.1})`);
-    gradient.addColorStop(0.5, `rgba(59, 130, 246, ${0.9 + intensity * 0.1})`);
-    gradient.addColorStop(1, `rgba(147, 51, 234, ${0.9 + intensity * 0.1})`);
+    gradient.addColorStop(0, `rgba(${COLORS.cyan}, 1)`);
+    gradient.addColorStop(0.5, `rgba(${COLORS.blue}, 1)`);
+    gradient.addColorStop(1, `rgba(${COLORS.indigo}, 1)`);
+
+    // Add glow effect
+    ctx.shadowBlur = VISUALIZER_CONFIG.shadowBlur;
+    ctx.shadowColor = `rgba(${COLORS.blue}, ${0.6 + intensity * 0.4})`;
 
     ctx.fillStyle = gradient;
     ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
 
-    // Add glow effect on taller bars
-    if (barHeight > 20) {
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = `rgba(59, 130, 246, ${intensity * 0.8})`;
-      ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-      ctx.shadowBlur = 0;
-    }
+    ctx.shadowBlur = 0;
 
-    x += barWidth + 1;
+    x += barWidth + VISUALIZER_CONFIG.barGap;
   }
 }
 
@@ -150,10 +173,10 @@ function drawFrequencyBars(ctx, analyser, dataArray, canvas) {
 function drawWaveform(ctx, analyser, dataArray, canvas) {
   analyser.getByteTimeDomainData(dataArray);
 
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = "rgba(59, 130, 246, 0.9)";
-  ctx.shadowBlur = 15;
-  ctx.shadowColor = "rgba(59, 130, 246, 0.6)";
+  ctx.lineWidth = VISUALIZER_CONFIG.lineWidth;
+  ctx.strokeStyle = `rgba(${COLORS.blue}, 0.9)`;
+  ctx.shadowBlur = VISUALIZER_CONFIG.shadowBlur;
+  ctx.shadowColor = `rgba(${COLORS.blue}, 0.6)`;
 
   ctx.beginPath();
 
@@ -186,8 +209,8 @@ function drawCircular(ctx, analyser, dataArray, canvas) {
 
   const centerX = canvas.width / 2;
   const centerY = canvas.height / 2;
-  const radius = Math.min(centerX, centerY) - 10;
-  const bars = 64;
+  const radius = Math.min(centerX, centerY) - VISUALIZER_CONFIG.circularPadding;
+  const bars = VISUALIZER_CONFIG.circularBars;
 
   for (let i = 0; i < bars; i++) {
     const barHeight = dataArray[i] / 2;
@@ -200,13 +223,16 @@ function drawCircular(ctx, analyser, dataArray, canvas) {
 
     const intensity = barHeight / 128;
     const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
-    gradient.addColorStop(0, `rgba(147, 51, 234, ${0.8 + intensity * 0.2})`);
-    gradient.addColorStop(1, `rgba(34, 211, 238, ${0.8 + intensity * 0.2})`);
+    gradient.addColorStop(
+      0,
+      `rgba(${COLORS.purple}, ${0.8 + intensity * 0.2})`
+    );
+    gradient.addColorStop(1, `rgba(${COLORS.cyan}, ${0.8 + intensity * 0.2})`);
 
     ctx.strokeStyle = gradient;
-    ctx.lineWidth = 3;
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = `rgba(59, 130, 246, ${intensity * 0.8})`;
+    ctx.lineWidth = VISUALIZER_CONFIG.circularLineWidth;
+    ctx.shadowBlur = VISUALIZER_CONFIG.circularShadowBlur;
+    ctx.shadowColor = `rgba(${COLORS.blue}, ${intensity * 0.8})`;
 
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -223,43 +249,55 @@ function drawCircular(ctx, analyser, dataArray, canvas) {
 function drawMirrorBars(ctx, analyser, dataArray, canvas) {
   analyser.getByteFrequencyData(dataArray);
 
-  const barWidth = (canvas.width / dataArray.length) * 2.5;
+  const barWidth =
+    (canvas.width / dataArray.length) * VISUALIZER_CONFIG.barWidthMultiplier;
   let x = 0;
+  const centerY = canvas.height / 2;
 
   for (let i = 0; i < dataArray.length; i++) {
-    const barHeight = dataArray[i] / 2;
-    const centerY = canvas.height / 2;
-
-    // Create gradient for each bar
-    const gradient = ctx.createLinearGradient(
-      0,
-      centerY - barHeight / 2,
-      0,
-      centerY + barHeight / 2
+    const barHeight = Math.max(
+      dataArray[i] / 2,
+      VISUALIZER_CONFIG.minBarHeight
     );
     const intensity = barHeight / 128;
 
-    gradient.addColorStop(0, `rgba(34, 211, 238, ${0.9 + intensity * 0.1})`);
-    gradient.addColorStop(0.5, `rgba(59, 130, 246, ${0.9 + intensity * 0.1})`);
-    gradient.addColorStop(1, `rgba(147, 51, 234, ${0.9 + intensity * 0.1})`);
+    // Create gradient for top half (from center going up)
+    const topGradient = ctx.createLinearGradient(
+      0,
+      centerY,
+      0,
+      centerY - barHeight / 2
+    );
+    topGradient.addColorStop(0, `rgba(${COLORS.blue}, 1)`);
+    topGradient.addColorStop(0.5, `rgba(${COLORS.cyan}, 1)`);
+    topGradient.addColorStop(1, `rgba(${COLORS.indigo}, 1)`);
 
-    ctx.fillStyle = gradient;
+    // Create gradient for bottom half (from center going down)
+    const bottomGradient = ctx.createLinearGradient(
+      0,
+      centerY,
+      0,
+      centerY + barHeight / 2
+    );
+    bottomGradient.addColorStop(0, `rgba(${COLORS.blue}, 1)`);
+    bottomGradient.addColorStop(0.5, `rgba(${COLORS.cyan}, 1)`);
+    bottomGradient.addColorStop(1, `rgba(${COLORS.indigo}, 1)`);
 
-    // Draw top half
+    // Add glow effect
+    ctx.shadowBlur = VISUALIZER_CONFIG.shadowBlur;
+    ctx.shadowColor = `rgba(${COLORS.blue}, ${0.6 + intensity * 0.4})`;
+
+    // Draw top half with its gradient
+    ctx.fillStyle = topGradient;
     ctx.fillRect(x, centerY - barHeight / 2, barWidth, barHeight / 2);
-    // Draw bottom half (mirrored)
+
+    // Draw bottom half (mirrored) with its gradient
+    ctx.fillStyle = bottomGradient;
     ctx.fillRect(x, centerY, barWidth, barHeight / 2);
 
-    // Add glow effect on taller bars
-    if (barHeight > 20) {
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = `rgba(59, 130, 246, ${intensity * 0.8})`;
-      ctx.fillRect(x, centerY - barHeight / 2, barWidth, barHeight / 2);
-      ctx.fillRect(x, centerY, barWidth, barHeight / 2);
-      ctx.shadowBlur = 0;
-    }
+    ctx.shadowBlur = 0;
 
-    x += barWidth + 1;
+    x += barWidth + VISUALIZER_CONFIG.barGap;
   }
 }
 

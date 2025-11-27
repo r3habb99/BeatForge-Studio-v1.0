@@ -7,8 +7,10 @@ import { getState, saveState } from "../../state/stateManager.js";
 import {
   resumeAudioContext,
   getAudioContext,
+  isAudioInitialized,
 } from "../../audio/audioEngine.js";
 import { startScheduler, stopScheduler } from "../../scheduler/scheduler.js";
+import { toast } from "../../utils/toast.js";
 
 /**
  * Update play button UI
@@ -36,10 +38,14 @@ export function setupPlayButton(initializeAppCallback) {
     try {
       const state = getState();
 
-      // Initialize audio if not already done
-      const audioCtx = getAudioContext();
-      if (!audioCtx) {
-        initializeAppCallback();
+      // Check if audio is initialized first (without throwing error)
+      if (!isAudioInitialized()) {
+        toast.warning(
+          "Audio Not Ready",
+          "Please click 'Initialize Audio' button first to enable playback.",
+          5000
+        );
+        return;
       }
 
       // Toggle play/pause
@@ -60,7 +66,11 @@ export function setupPlayButton(initializeAppCallback) {
       }
     } catch (error) {
       console.error("Failed to toggle playback:", error);
-      alert(`Playback Error: ${error.message}`);
+      toast.error(
+        "Playback Error",
+        error.message || "An unexpected error occurred",
+        5000
+      );
       const state = getState();
       state.isPlaying = false;
       stopScheduler();
@@ -95,7 +105,7 @@ export function setupBPMInput() {
     const state = getState();
     const newBpm = parseInt(e.target.value);
     if (isNaN(newBpm) || newBpm < 40 || newBpm > 240) {
-      alert("BPM must be between 40 and 240");
+      toast.warning("Invalid BPM", "BPM must be between 40 and 240");
       e.target.value = state.bpm;
       return;
     }

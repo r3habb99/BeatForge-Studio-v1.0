@@ -7,7 +7,6 @@
 import { getAudioContext, getMasterGain, getAnalyser } from "./audioContext.js";
 import { createImpulseResponse } from "./utils/impulse-response.js";
 import { AUDIO_CONFIG } from "../config/audioConfig.js";
-import { Validators } from "../utils/validators.js";
 import { Logger } from "../utils/logger.js";
 
 /**
@@ -121,17 +120,20 @@ const EffectsManager = {
 
   /**
    * Update reverb decay time with validation
-   * @param {number} value - Decay time in seconds (0.1 to 10)
+   * @param {number|string} value - Decay time in seconds (0.1 to 10)
    */
   updateReverbTime(value) {
     try {
-      const validation = Validators.validateDuration(value, 0.1, 10);
-      if (!validation.isValid) {
-        Logger.warn(`Invalid reverb time: ${validation.errors.join(", ")}`);
+      const decayTime = parseFloat(value);
+
+      // Manual validation for reverb time range
+      if (isNaN(decayTime) || decayTime < 0.1 || decayTime > 10) {
+        Logger.warn(
+          `Invalid reverb time: ${value}. Must be between 0.1 and 10`
+        );
         return false;
       }
 
-      const decayTime = parseFloat(value);
       if (this.reverbNode) {
         this.reverbNode.buffer = createImpulseResponse(decayTime, 2, false);
         Logger.debug(`Reverb decay time updated to ${decayTime}s`);
@@ -153,23 +155,26 @@ const EffectsManager = {
 
   /**
    * Update delay time with validation
-   * @param {number} value - Delay time in seconds (0.01 to DELAY_MAX_TIME)
+   * @param {number|string} value - Delay time in seconds (0.01 to DELAY_MAX_TIME)
    */
   updateDelayTime(value) {
     try {
-      const validation = Validators.validateDuration(
-        value,
-        0.01,
-        AUDIO_CONFIG.DELAY_MAX_TIME
-      );
-      if (!validation.isValid) {
-        Logger.warn(`Invalid delay time: ${validation.errors.join(", ")}`);
+      const delayTime = parseFloat(value);
+
+      // Manual validation for delay time range
+      if (
+        isNaN(delayTime) ||
+        delayTime < 0.01 ||
+        delayTime > AUDIO_CONFIG.DELAY_MAX_TIME
+      ) {
+        Logger.warn(
+          `Invalid delay time: ${value}. Must be between 0.01 and ${AUDIO_CONFIG.DELAY_MAX_TIME}`
+        );
         return false;
       }
 
       const audioCtx = getAudioContext();
       if (this.delayNode && audioCtx) {
-        const delayTime = parseFloat(value);
         this.delayNode.delayTime.linearRampToValueAtTime(
           delayTime,
           audioCtx.currentTime + 0.1

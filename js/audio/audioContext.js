@@ -343,5 +343,10 @@ export async function resumeAudioContext() {
   return await manager.resumeContext();
 }
 
+export function isAudioInitialized() {
+  const manager = AudioContextManager.getInstance();
+  return manager.isInitialized();
+}
+
 // Export the manager class for direct access if needed
 export { AudioContextManager };

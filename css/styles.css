@@ -1139,40 +1139,104 @@ body {
   appearance: none;
   background: transparent;
   outline: none;
+  min-height: 44px;
+  cursor: pointer;
+  touch-action: manipulation;
 }
 
 .effect-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  height: 14px;
-  width: 14px;
+  height: 24px;
+  width: 24px;
   border-radius: 50%;
   background: var(--accent);
   cursor: pointer;
-  margin-top: -5px;
+  margin-top: -10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.effect-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.effect-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15);
 }
 
 .effect-slider::-webkit-slider-runnable-track {
   width: 100%;
-  height: 4px;
+  height: 6px;
   background: #444;
-  border-radius: 2px;
+  border-radius: 3px;
 }
 
 .effect-slider::-moz-range-thumb {
-  height: 14px;
-  width: 14px;
+  height: 24px;
+  width: 24px;
   border-radius: 50%;
   background: var(--accent);
   cursor: pointer;
   border: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.effect-slider::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.effect-slider::-moz-range-thumb:active {
+  transform: scale(1.15);
 }
 
 .effect-slider::-moz-range-track {
   width: 100%;
-  height: 4px;
+  height: 6px;
   background: #444;
-  border-radius: 2px;
+  border-radius: 3px;
+}
+
+/* Mobile-specific enhancements for effect sliders */
+@media (max-width: 639px) {
+  .effect-slider::-webkit-slider-thumb {
+    height: 28px;
+    width: 28px;
+    margin-top: -11px;
+  }
+
+  .effect-slider::-webkit-slider-runnable-track {
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .effect-slider::-moz-range-thumb {
+    height: 28px;
+    width: 28px;
+  }
+
+  .effect-slider::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .effect-controls {
+    padding: var(--spacing-lg);
+    gap: var(--spacing-lg);
+  }
+
+  .effect-label {
+    font-size: 0.75rem;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  .effect-title {
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-md);
+  }
 }
 
 .info-section {

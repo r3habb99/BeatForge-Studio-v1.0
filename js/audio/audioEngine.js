@@ -11,6 +11,7 @@ import {
   getFrequencyData,
   updateMasterVolume,
   resumeAudioContext,
+  isAudioInitialized,
 } from "./audioContext.js";
 
 import {
@@ -60,6 +61,7 @@ export {
   getAnalyser,
   getFrequencyData,
   resumeAudioContext,
+  isAudioInitialized,
   exportToWAV,
   initRecorder,
   startRecording,
