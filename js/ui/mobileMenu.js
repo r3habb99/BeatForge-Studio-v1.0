@@ -89,6 +89,16 @@ function syncMobileMenuControls() {
     patternSelectMobile.innerHTML = patternSelect.innerHTML;
     patternSelectMobile.value = patternSelect.value;
   }
+
+  // Sync audio initialization button visibility
+  const initAudioBtn = document.getElementById("initAudioBtn");
+  const initAudioBtnMobile = document.getElementById("initAudioBtnMobile");
+  if (initAudioBtn && initAudioBtnMobile) {
+    // If desktop button is hidden, hide mobile button too
+    if (initAudioBtn.classList.contains("hidden")) {
+      initAudioBtnMobile.classList.add("hidden");
+    }
+  }
 }
 
 /**
@@ -137,6 +147,21 @@ function setupMobileMenuEventListeners() {
     });
   }
 
+  // Initialize Audio button (critical for mobile)
+  const initAudioBtnMobile = document.getElementById("initAudioBtnMobile");
+  if (initAudioBtnMobile) {
+    initAudioBtnMobile.addEventListener("click", () => {
+      // Trigger click on the main init audio button
+      const initAudioBtn = document.getElementById("initAudioBtn");
+      if (initAudioBtn) {
+        initAudioBtn.click();
+        // Hide the mobile init button after initialization
+        initAudioBtnMobile.classList.add("hidden");
+        closeMobileMenu();
+      }
+    });
+  }
+
   // Export button
   const exportBtnMobile = document.getElementById("exportBtnMobile");
   if (exportBtnMobile) {
@@ -178,8 +203,7 @@ function showMobileThemeSelector() {
   // Create theme selector modal
   const modal = document.createElement("div");
   modal.id = "mobileThemeModal";
-  modal.className =
-    "fixed inset-0 z-[1002] flex items-center justify-center p-4";
+  modal.className = "fixed inset-0 z-[1002] flex items-center justify-center p-4";
   modal.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
 
   const content = `
@@ -273,9 +297,7 @@ function syncRecordingControls() {
     recordBtnMobile.addEventListener("click", () => recordBtn.click());
   }
   if (pauseRecordBtn && pauseRecordBtnMobile) {
-    pauseRecordBtnMobile.addEventListener("click", () =>
-      pauseRecordBtn.click()
-    );
+    pauseRecordBtnMobile.addEventListener("click", () => pauseRecordBtn.click());
   }
   if (stopRecordBtn && stopRecordBtnMobile) {
     stopRecordBtnMobile.addEventListener("click", () => stopRecordBtn.click());

@@ -159,11 +159,19 @@
             <!-- Logo and Title -->
             <div class="logo-section">
                 <div class="flex items-center" role="heading" aria-level="1">
-                    <img src="img/BeatForge%20Studio.png" alt="BeatForge Studio Logo" class="h-8 md:h-10 w-auto">
-                    <h1 class="text-blue-500 font-bold text-lg md:text-xl tracking-wider hidden md:inline">BeatForge
+                    <img src="img/BeatForge%20Studio.png" alt="BeatForge Studio Logo"
+                        class="h-8 md:h-10 w-auto max-w-full object-contain flex-shrink-0">
+                    <h1 class="text-blue-500 font-bold text-lg md:text-xl tracking-wider hidden md:inline truncate">
+                        BeatForge
                         Studio</h1>
                 </div>
             </div>
+
+            <!-- Mobile Init Audio Button - Visible on mobile before audio is initialized (icon-only for space) -->
+            <button id="initAudioBtnHeader" aria-label="Tap to enable audio" title="Tap to Start Audio"
+                class="md:hidden w-11 h-11 bg-green-600 hover:bg-green-500 text-white rounded-lg font-bold flex items-center justify-center animate-pulse flex-shrink-0">
+                <i class="fas fa-volume-up text-lg"></i>
+            </button>
 
             <!-- Playback Controls Group -->
             <div class="playback-controls-group">
@@ -204,9 +212,8 @@
             </div>
 
             <!-- Visualizer -->
-            <div class="visualizer-container hidden xl:flex">
-                <canvas id="visualizer" width="320" height="80" aria-label="Audio visualizer"
-                    class="visualizer"></canvas>
+            <div class="visualizer-container hidden lg:flex">
+                <canvas id="visualizer" aria-label="Audio visualizer" class="visualizer"></canvas>
                 <button id="visualizerModeBtn" aria-label="Change visualizer mode" class="visualizer-mode-btn">
                     <i class="fas fa-chart-bar"></i>
                 </button>
@@ -364,6 +371,11 @@
                 <h3 class="mobile-menu-section-title">
                     <i class="fas fa-cog mr-2"></i>Actions
                 </h3>
+                <!-- Initialize Audio - Critical for mobile -->
+                <button id="initAudioBtnMobile" aria-label="Initialize audio engine"
+                    class="mobile-menu-button bg-green-600 hover:bg-green-500">
+                    <i class="fas fa-play-circle mr-2"></i>Initialize Audio
+                </button>
                 <button id="exportBtnMobile" aria-label="Export Recording" disabled
                     class="mobile-menu-button bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i class="fas fa-download mr-2"></i>Export

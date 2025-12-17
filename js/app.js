@@ -82,6 +82,37 @@ function initializeConfig() {
 }
 
 /**
+ * Hide all audio initialization buttons
+ */
+function hideAllInitAudioButtons() {
+  const buttons = [
+    document.getElementById("initAudioBtn"),
+    document.getElementById("initAudioBtnHeader"),
+    document.getElementById("initAudioBtnMobile"),
+  ];
+  buttons.forEach((btn) => {
+    if (btn) btn.classList.add("hidden");
+  });
+}
+
+/**
+ * Show all audio initialization buttons (for retry)
+ */
+function showAllInitAudioButtons() {
+  const buttons = [
+    document.getElementById("initAudioBtn"),
+    document.getElementById("initAudioBtnHeader"),
+    document.getElementById("initAudioBtnMobile"),
+  ];
+  buttons.forEach((btn) => {
+    if (btn) {
+      btn.classList.remove("hidden");
+      btn.classList.remove("animate-pulse");
+    }
+  });
+}
+
+/**
  * Initialize audio and UI
  */
 function initializeApp() {
@@ -91,7 +122,7 @@ function initializeApp() {
     initAudio();
     drawVisualizer();
     startScheduler();
-    document.getElementById("initAudioBtn").classList.add("hidden");
+    hideAllInitAudioButtons();
     loadState();
     renderUI();
     Logger.info("Application initialized successfully");
@@ -105,8 +136,7 @@ function initializeApp() {
     alert(
       `Audio Initialization Failed: ${error.message}\n\nPlease check your browser settings and ensure audio is not blocked.`
     );
-    document.getElementById("initAudioBtn").classList.remove("hidden");
-    document.getElementById("initAudioBtn").classList.remove("animate-pulse");
+    showAllInitAudioButtons();
     document.getElementById("initAudioBtn").innerText = "Retry Audio Init";
   }
 }
@@ -331,8 +361,22 @@ document.addEventListener("DOMContentLoaded", () => {
   announce("BeatForge Studio loaded. Press Tab to navigate controls.");
 });
 
-// Initialize audio button
+// Initialize audio button (desktop - in actions menu)
 document.getElementById("initAudioBtn").addEventListener("click", initializeApp);
+
+// Initialize audio button (mobile - visible in header)
+const initAudioBtnHeader = document.getElementById("initAudioBtnHeader");
+if (initAudioBtnHeader) {
+  initAudioBtnHeader.addEventListener("click", () => {
+    initializeApp();
+    // Hide all init audio buttons after initialization
+    initAudioBtnHeader.classList.add("hidden");
+    const initAudioBtnMobile = document.getElementById("initAudioBtnMobile");
+    if (initAudioBtnMobile) {
+      initAudioBtnMobile.classList.add("hidden");
+    }
+  });
+}
 
 // --- EXPOSE NAMESPACE TO GLOBAL SCOPE ---
 // Only expose the BeatForge namespace to prevent pollution

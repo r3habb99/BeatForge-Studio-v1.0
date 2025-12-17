@@ -661,12 +661,18 @@ body {
   }
 
   #pianoRollModal #pianoKeys {
-    width: 50px; /* Narrower keys on mobile */
+    width: 45px; /* Narrower keys on mobile */
+    font-size: 9px;
   }
 
   #pianoRollModal .piano-grid-cell {
-    min-height: 32px; /* Larger touch targets */
-    min-width: 32px;
+    min-height: 36px; /* Larger touch targets for better mobile UX */
+    min-width: 44px; /* WCAG 2.5.5 minimum touch target */
+  }
+
+  #pianoRollModal .piano-header-cell {
+    min-width: 44px;
+    font-size: 11px;
   }
 
   /* Piano roll - optimize for mobile */
@@ -679,6 +685,7 @@ body {
     height: 60px;
     flex-direction: row;
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .note-grid {
@@ -692,6 +699,19 @@ body {
   .header-content {
     grid-template-columns: auto 1fr auto auto;
     gap: var(--spacing-md);
+  }
+}
+
+/* Large tablets: Show compact visualizer */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .header-content {
+    grid-template-columns: auto 1fr auto auto auto;
+  }
+
+  .visualizer-container {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: center;
   }
 }
 
@@ -926,6 +946,9 @@ body {
 }
 
 .visualizer {
+  /* Responsive canvas sizing */
+  width: 200px;
+  height: 60px;
   border-radius: 12px;
   background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
   border: 2px solid var(--accent);
@@ -936,6 +959,14 @@ body {
   opacity: 1;
   transition: all 0.3s ease;
   cursor: pointer;
+}
+
+/* Larger visualizer on xl screens */
+@media (min-width: 1280px) {
+  .visualizer {
+    width: 320px;
+    height: 80px;
+  }
 }
 
 .visualizer:hover {
@@ -1611,6 +1642,20 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Responsive piano grid cell widths - override Tailwind w-16 on mobile */
+@media (max-width: 767px) {
+  #pianoGrid .w-16,
+  #pianoGrid .piano-grid-cell.w-16 {
+    width: 44px !important; /* WCAG 2.5.5 minimum touch target */
+    min-width: 44px !important;
+  }
+
+  .piano-header-cell.w-16 {
+    width: 44px !important;
+    min-width: 44px !important;
+  }
 }
 
 .piano-grid-cell:hover {
@@ -2289,6 +2334,119 @@ input[type="range"]:hover::-moz-range-thumb {
   .shortcuts-overlay {
     display: none !important;
   }
+
+  /* Mobile track layout improvements */
+  .mobile-track-header {
+    min-width: 140px;
+    max-width: 140px;
+    padding: 6px 8px;
+  }
+
+  .track-name-text {
+    max-width: 65px;
+  }
+
+  .mobile-step-btn {
+    min-width: 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+/* Very small screens (< 360px) - ultra compact mode */
+@media (max-width: 359px) {
+  :root {
+    --header-height: 52px;
+    --spacing-xs: 3px;
+    --spacing-sm: 5px;
+    --spacing-md: 8px;
+    --spacing-lg: 12px;
+  }
+
+  /* Header - ultra compact */
+  .header-container {
+    padding: var(--spacing-xs) var(--spacing-xs);
+  }
+
+  /* Logo - smallest on very tiny screens */
+  .logo-section img {
+    height: 24px;
+  }
+
+  /* Mobile menu button - smaller */
+  .mobile-menu-btn {
+    width: 2.25rem;
+    height: 2.25rem;
+    font-size: 1rem;
+  }
+
+  /* Transport buttons - minimum size */
+  .btn-transport {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* BPM control - compact */
+  .control-group:has(#bpmInput) .control-label {
+    display: none;
+  }
+
+  #bpmInput {
+    width: 48px;
+    font-size: 12px;
+  }
+
+  /* Mobile track layout - ultra compact */
+  .mobile-track-header {
+    min-width: 120px;
+    max-width: 120px;
+    padding: 4px 6px;
+    gap: 4px;
+  }
+
+  .track-name-text {
+    max-width: 50px;
+    font-size: 11px;
+  }
+
+  .mobile-mute-btn,
+  .mobile-solo-btn {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: 0.625rem;
+  }
+
+  .mobile-step-btn {
+    min-width: 2.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 0.375rem;
+  }
+
+  /* Toast notifications - full width on tiny screens */
+  .toast-container {
+    left: 5px;
+    right: 5px;
+  }
+
+  .toast {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  /* Footer - ultra compact */
+  .footer-content {
+    padding: var(--spacing-xs);
+    gap: var(--spacing-xs);
+  }
+
+  .effect-panel {
+    padding: var(--spacing-xs);
+  }
+
+  .effect-label {
+    font-size: 10px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -2607,7 +2765,8 @@ input[type="range"]:hover::-moz-range-thumb {
   top: 0;
   left: 0;
   bottom: 0;
-  width: 300px;
+  width: min(300px, 85vw); /* Fluid width for very small screens */
+  max-width: 300px;
   background: var(--bg-panel);
   z-index: 999;
   transform: translateX(-100%);
