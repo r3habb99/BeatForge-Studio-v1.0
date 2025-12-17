@@ -18,6 +18,7 @@ import {
 import { SYNTH_CONFIG } from "../../config/audioConfig.js";
 import { Logger } from "../../utils/logger.js";
 import { Validators } from "../../utils/validators.js";
+import { getFreq } from "../utils/frequency-converter.js";
 
 /**
  * Synth sound dispatcher with caching and validation
@@ -166,12 +167,18 @@ function playSynth(track, noteInfo, time, duration) {
       return false;
     }
 
-    // Validate note frequency
+    // Validate note frequency - convert note name to frequency first
+    const noteFrequency =
+      typeof noteInfo.note === "string"
+        ? getFreq(noteInfo.note)
+        : noteInfo.note;
     if (
-      noteInfo.note < SYNTH_CONFIG.MIN_FREQUENCY ||
-      noteInfo.note > SYNTH_CONFIG.MAX_FREQUENCY
+      noteFrequency < SYNTH_CONFIG.MIN_FREQUENCY ||
+      noteFrequency > SYNTH_CONFIG.MAX_FREQUENCY
     ) {
-      Logger.warn(`Note frequency out of range: ${noteInfo.note}Hz`);
+      Logger.warn(
+        `Note frequency out of range: ${noteFrequency}Hz (note: ${noteInfo.note})`
+      );
       return false;
     }
 
@@ -187,9 +194,11 @@ function playSynth(track, noteInfo, time, duration) {
     }
 
     Logger.debug(
-      `Playing synth: ${synthType} at note ${noteInfo.note.toFixed(
-        2
-      )}Hz, time ${time.toFixed(3)}s, duration ${duration.toFixed(3)}s`
+      `Playing synth: ${synthType} at note ${
+        noteInfo.note
+      } (${noteFrequency.toFixed(2)}Hz), time ${time.toFixed(
+        3
+      )}s, duration ${duration.toFixed(3)}s`
     );
 
     // Route to specific synth type
