@@ -39,6 +39,7 @@ import { initShortcutsOverlay } from "./utils/shortcutsOverlay.js";
 import { initTrackColors } from "./utils/trackColors.js";
 import { initActionsMenu } from "./ui/actionsMenu.js";
 import { Logger } from "./utils/logger.js";
+import { initErrorBoundary } from "./utils/errorBoundary.js";
 
 // Import configuration
 import {
@@ -53,6 +54,9 @@ import {
 function initializeConfig() {
   const environment = getEnvironment();
   const config = getConfig(environment);
+
+  // CRITICAL: Initialize global error boundary FIRST
+  initErrorBoundary();
 
   // Log environment and config status
   Logger.info(`Environment: ${environment}`);

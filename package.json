@@ -1,0 +1,66 @@
+{
+  "name": "beatforge-studio",
+  "version": "1.0.3",
+  "description": "Professional Web-Based Digital Audio Workstation (DAW) with 16-step sequencer, drum sounds, synthesizers, and studio effects",
+  "type": "module",
+  "main": "js/app.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "lint": "eslint js/**/*.js",
+    "lint:fix": "eslint js/**/*.js --fix",
+    "format": "prettier --write \"js/**/*.js\" \"css/**/*.css\" \"*.html\"",
+    "format:check": "prettier --check \"js/**/*.js\" \"css/**/*.css\" \"*.html\"",
+    "serve": "python3 -m http.server 8000",
+    "validate": "npm run lint && npm run format:check && npm run test"
+  },
+  "keywords": [
+    "daw",
+    "music-production",
+    "beat-maker",
+    "synthesizer",
+    "drum-machine",
+    "web-audio",
+    "sequencer",
+    "audio-workstation",
+    "pwa"
+  ],
+  "author": "BeatForge Studio",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r3habb99/BeatForge-Studio-v1.0.git"
+  },
+  "bugs": {
+    "url": "https://github.com/r3habb99/BeatForge-Studio-v1.0/issues"
+  },
+  "homepage": "https://r3habb99.github.io/BeatForge-Studio-v1.0/",
+  "devDependencies": {
+    "@testing-library/dom": "^9.3.4",
+    "@testing-library/user-event": "^14.5.2",
+    "@vitest/coverage-v8": "^1.2.0",
+    "@vitest/ui": "^1.2.0",
+    "eslint": "^8.56.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "happy-dom": "^13.3.5",
+    "prettier": "^3.2.4",
+    "vite": "^5.0.11",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Safari versions",
+    "last 2 Edge versions"
+  ]
+}
+

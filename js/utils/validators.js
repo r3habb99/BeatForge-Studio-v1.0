@@ -13,6 +13,16 @@ class ValidationResult {
     this.error = error;
   }
 
+  /**
+   * Throw error if validation failed
+   * @throws {Error} If validation is invalid
+   */
+  throwIfInvalid() {
+    if (!this.isValid) {
+      throw new Error(this.error || "Validation failed");
+    }
+  }
+
   static valid() {
     return new ValidationResult(true);
   }
@@ -38,9 +48,7 @@ const Validators = {
     const { min = 0.001, max = 300 } = options;
 
     if (typeof duration !== "number") {
-      return ValidationResult.invalid(
-        `Duration must be a number, got ${typeof duration}`
-      );
+      return ValidationResult.invalid(`Duration must be a number, got ${typeof duration}`);
     }
 
     if (isNaN(duration)) {
@@ -48,15 +56,11 @@ const Validators = {
     }
 
     if (duration < min) {
-      return ValidationResult.invalid(
-        `Duration must be at least ${min} seconds`
-      );
+      return ValidationResult.invalid(`Duration must be at least ${min} seconds`);
     }
 
     if (duration > max) {
-      return ValidationResult.invalid(
-        `Duration must not exceed ${max} seconds (got ${duration}s)`
-      );
+      return ValidationResult.invalid(`Duration must not exceed ${max} seconds (got ${duration}s)`);
     }
 
     return ValidationResult.valid();
@@ -75,15 +79,11 @@ const Validators = {
     const num = parseFloat(bpm);
 
     if (isNaN(num)) {
-      return ValidationResult.invalid(
-        `BPM must be a valid number, got '${bpm}'`
-      );
+      return ValidationResult.invalid(`BPM must be a valid number, got '${bpm}'`);
     }
 
     if (num < min || num > max) {
-      return ValidationResult.invalid(
-        `BPM must be between ${min} and ${max}, got ${num}`
-      );
+      return ValidationResult.invalid(`BPM must be between ${min} and ${max}, got ${num}`);
     }
 
     return ValidationResult.valid();
@@ -107,15 +107,11 @@ const Validators = {
     const missing = required.filter((field) => !(field in track));
 
     if (missing.length > 0) {
-      return ValidationResult.invalid(
-        `Track missing required fields: ${missing.join(", ")}`
-      );
+      return ValidationResult.invalid(`Track missing required fields: ${missing.join(", ")}`);
     }
 
     if (!["drum", "synth"].includes(track.type)) {
-      return ValidationResult.invalid(
-        `Track type must be 'drum' or 'synth', got '${track.type}'`
-      );
+      return ValidationResult.invalid(`Track type must be 'drum' or 'synth', got '${track.type}'`);
     }
 
     if (typeof track.name !== "string" || track.name.trim().length === 0) {
@@ -148,6 +144,44 @@ const Validators = {
   },
 
   /**
+   * Validate gain value (0-1 range)
+   * @param {number} gain - Gain value
+   * @returns {ValidationResult} Validation result
+   */
+  validateGain(gain) {
+    const num = parseFloat(gain);
+
+    if (isNaN(num)) {
+      return ValidationResult.invalid(`Gain must be a valid number, got '${gain}'`);
+    }
+
+    if (num < 0 || num > 1) {
+      return ValidationResult.invalid(`Gain must be between 0 and 1, got ${num}`);
+    }
+
+    return ValidationResult.valid();
+  },
+
+  /**
+   * Validate frequency value (20-20000 Hz)
+   * @param {number} frequency - Frequency in Hz
+   * @returns {ValidationResult} Validation result
+   */
+  validateFrequency(frequency) {
+    const num = parseFloat(frequency);
+
+    if (isNaN(num)) {
+      return ValidationResult.invalid(`Frequency must be a valid number, got '${frequency}'`);
+    }
+
+    if (num < 20 || num > 20000) {
+      return ValidationResult.invalid(`Frequency must be between 20 and 20000 Hz, got ${num}`);
+    }
+
+    return ValidationResult.valid();
+  },
+
+  /**
    * Validate volume level
    * @param {number} volume - Volume level
    * @param {Object} options - Validation options
@@ -160,15 +194,11 @@ const Validators = {
     const num = parseFloat(volume);
 
     if (isNaN(num)) {
-      return ValidationResult.invalid(
-        `Volume must be a valid number, got '${volume}'`
-      );
+      return ValidationResult.invalid(`Volume must be a valid number, got '${volume}'`);
     }
 
     if (num < min || num > max) {
-      return ValidationResult.invalid(
-        `Volume must be between ${min} and ${max}, got ${num}`
-      );
+      return ValidationResult.invalid(`Volume must be between ${min} and ${max}, got ${num}`);
     }
 
     return ValidationResult.valid();
@@ -183,15 +213,11 @@ const Validators = {
     const num = parseFloat(pan);
 
     if (isNaN(num)) {
-      return ValidationResult.invalid(
-        `Pan must be a valid number, got '${pan}'`
-      );
+      return ValidationResult.invalid(`Pan must be a valid number, got '${pan}'`);
     }
 
     if (num < -1 || num > 1) {
-      return ValidationResult.invalid(
-        `Pan must be between -1 and 1, got ${num}`
-      );
+      return ValidationResult.invalid(`Pan must be between -1 and 1, got ${num}`);
     }
 
     return ValidationResult.valid();
@@ -235,9 +261,7 @@ const Validators = {
     }
 
     if (typeof note.note !== "number" || note.note < 0 || note.note > 127) {
-      return ValidationResult.invalid(
-        "Note must be a number between 0 and 127 (MIDI range)"
-      );
+      return ValidationResult.invalid("Note must be a number between 0 and 127 (MIDI range)");
     }
 
     if (typeof note.len !== "number" || note.len <= 0) {
@@ -245,16 +269,12 @@ const Validators = {
     }
 
     if (typeof note.step !== "number" || note.step < 0) {
-      return ValidationResult.invalid(
-        "Note step must be a non-negative number"
-      );
+      return ValidationResult.invalid("Note step must be a non-negative number");
     }
 
     if (
       "velocity" in note &&
-      (typeof note.velocity !== "number" ||
-        note.velocity < 0 ||
-        note.velocity > 1)
+      (typeof note.velocity !== "number" || note.velocity < 0 || note.velocity > 1)
     ) {
       return ValidationResult.invalid("Note velocity must be between 0 and 1");
     }
@@ -273,15 +293,11 @@ const Validators = {
     }
 
     if (typeof pattern.id !== "number" || pattern.id < 0) {
-      return ValidationResult.invalid(
-        "Pattern id must be a non-negative number"
-      );
+      return ValidationResult.invalid("Pattern id must be a non-negative number");
     }
 
     if (typeof pattern.name !== "string" || pattern.name.trim().length === 0) {
-      return ValidationResult.invalid(
-        "Pattern name must be a non-empty string"
-      );
+      return ValidationResult.invalid("Pattern name must be a non-empty string");
     }
 
     if (!Array.isArray(pattern.tracks)) {

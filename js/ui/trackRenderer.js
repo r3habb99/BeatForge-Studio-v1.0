@@ -2,6 +2,7 @@
  * Track Renderer Module
  * Handles rendering of track UI elements
  * Refactored: Added logging, debouncing, and optimizations
+ * Security: Added XSS protection via HTML sanitization
  */
 
 import { STEP_COUNT } from "../constants.js";
@@ -14,6 +15,7 @@ import {
 } from "./trackControls.js";
 import { Logger } from "../utils/logger.js";
 import { debounce, rafDebounce } from "../utils/debounce.js";
+import { sanitizeHTML } from "../utils/sanitize.js";
 
 let isInitialRender = true;
 
@@ -191,11 +193,12 @@ function renderDesktopTracks(
 
       // Only update innerHTML if creating new element or if we need to force update
       if (needsCreate || !hDiv.hasAttribute("data-rendered")) {
+        // SECURITY FIX: Sanitize track name to prevent XSS attacks
+        const safeName = sanitizeHTML(track.name);
+
         hDiv.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-sm truncate flex-1 mr-2">${
-                      track.name
-                    }</span>
+                    <span class="font-bold text-sm truncate flex-1 mr-2">${safeName}</span>
                     <div class="flex gap-1 flex-shrink-0">
                         <button class="mute-btn text-xs w-6 h-6 rounded ${
                           track.mute
