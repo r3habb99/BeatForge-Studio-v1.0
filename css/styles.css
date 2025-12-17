@@ -491,6 +491,35 @@ body {
   align-items: center;
 }
 
+/* Back to Home Button */
+.back-to-home-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.back-to-home-btn:hover {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.back-to-home-btn:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 /* Mobile: Compact header with only essential controls */
 @media (max-width: 767px) {
   .header-content {

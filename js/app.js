@@ -36,13 +36,7 @@ import { initErrorBoundary } from "./utils/errorBoundary.js";
 import { getConfig, getEnvironment, setEnvironment } from "./config/audioConfig.js";
 
 // Import accessibility utilities
-import {
-  initAccessibility,
-  hideLoadingOverlay,
-  updateLoadingText,
-  announce,
-  announceTransport,
-} from "./utils/accessibility.js";
+import { initAccessibility, updateLoadingText, announce } from "./utils/accessibility.js";
 
 // Import confirmation modal
 import { showConfirm } from "./utils/confirmModal.js";
@@ -91,7 +85,9 @@ function hideAllInitAudioButtons() {
     document.getElementById("initAudioBtnMobile"),
   ];
   buttons.forEach((btn) => {
-    if (btn) btn.classList.add("hidden");
+    if (btn) {
+      btn.classList.add("hidden");
+    }
   });
 }
 
@@ -133,8 +129,10 @@ function initializeApp() {
       {},
       error
     );
-    alert(
-      `Audio Initialization Failed: ${error.message}\n\nPlease check your browser settings and ensure audio is not blocked.`
+    toast.error(
+      "Audio Initialization Failed",
+      `${error.message}. Please check your browser settings and ensure audio is not blocked.`,
+      8000
     );
     showAllInitAudioButtons();
     document.getElementById("initAudioBtn").innerText = "Retry Audio Init";
@@ -157,7 +155,10 @@ async function exportProject() {
     // Check if audio is initialized
     const audioCtx = getAudioContext();
     if (!audioCtx) {
-      alert('Please initialize audio first by clicking the "Initialize Audio" button.');
+      toast.warning(
+        "Audio Not Initialized",
+        'Please initialize audio first by clicking the "Initialize Audio" button.'
+      );
       return;
     }
 
@@ -170,7 +171,7 @@ async function exportProject() {
     const hasSynthNotes = tracks.some((t) => t.type === "synth" && t.notes.length > 0);
 
     if (!hasDrumNotes && !hasSynthNotes) {
-      alert("No notes to export! Please add some notes to your pattern first.");
+      toast.warning("No Notes to Export", "Please add some notes to your pattern first.");
       return;
     }
 
@@ -186,23 +187,12 @@ async function exportProject() {
     if (hasRecording()) {
       // Export the recorded audio
       await exportRecording(`music-studio-recording-${Date.now()}.webm`);
-      if (window.toast) {
-        window.toast.success("Export Complete", "Your recording has been downloaded successfully!");
-      } else {
-        alert("Recording exported successfully! Your audio file has been downloaded.");
-      }
+      toast.success("Export Complete", "Your recording has been downloaded successfully!");
       Logger.info("Recording exported successfully");
     } else {
       // Fallback to offline rendering (old behavior)
       await exportToWAV(state, tracks);
-      if (window.toast) {
-        window.toast.success(
-          "Export Complete",
-          "Your audio file has been downloaded successfully!"
-        );
-      } else {
-        alert("Export completed successfully! Your audio file has been downloaded.");
-      }
+      toast.success("Export Complete", "Your audio file has been downloaded successfully!");
       Logger.info("Project exported to WAV successfully");
     }
 
@@ -211,11 +201,7 @@ async function exportProject() {
     exportBtn.disabled = false;
   } catch (error) {
     Logger.error(Logger.ERROR_CODES.EXPORT_FAILED, `Export failed: ${error.message}`, {}, error);
-    if (window.toast) {
-      window.toast.error("Export Failed", error.message || "An error occurred during export");
-    } else {
-      alert("Export failed: " + error.message);
-    }
+    toast.error("Export Failed", error.message || "An error occurred during export");
 
     // Restore button
     const exportBtn = document.getElementById("exportBtn");
@@ -289,35 +275,26 @@ const BeatForge = {
 
   // Helper function to get API documentation
   help: function () {
-    console.log(
-      "%c BeatForge Studio API Documentation",
-      "color: #4CAF50; font-size: 16px; font-weight: bold;"
-    );
-    console.log(
-      "%cUI Functions:%c\n" +
+    Logger.info("BeatForge Studio API Documentation");
+    Logger.info(
+      "UI Functions:\n" +
         "  BeatForge.UI.openPianoRoll() - Open piano roll editor\n" +
         "  BeatForge.UI.closePianoRoll() - Close piano roll editor\n" +
         "  BeatForge.UI.showShortcuts() - Show keyboard shortcuts\n" +
         "  BeatForge.UI.closeShortcuts() - Close shortcuts overlay\n" +
-        "  BeatForge.UI.renderUI() - Re-render the UI",
-      "color: #2196F3; font-weight: bold;",
-      "color: inherit;"
+        "  BeatForge.UI.renderUI() - Re-render the UI"
     );
-    console.log(
-      "%cProject Functions:%c\n" +
+    Logger.info(
+      "Project Functions:\n" +
         "  BeatForge.Project.exportProject() - Export current project\n" +
         "  BeatForge.Project.clearAllData() - Clear all data\n" +
         "  BeatForge.Project.getState() - Get application state\n" +
-        "  BeatForge.Project.getTracks() - Get current tracks",
-      "color: #2196F3; font-weight: bold;",
-      "color: inherit;"
+        "  BeatForge.Project.getTracks() - Get current tracks"
     );
-    console.log(
-      "%cInitialization:%c\n" +
+    Logger.info(
+      "Initialization:\n" +
         "  BeatForge.initialize() - Initialize the application\n" +
-        "  BeatForge.isInitialized() - Check if initialized",
-      "color: #2196F3; font-weight: bold;",
-      "color: inherit;"
+        "  BeatForge.isInitialized() - Check if initialized"
     );
   },
 };

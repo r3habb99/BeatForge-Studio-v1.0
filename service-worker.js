@@ -16,6 +16,20 @@ const STATIC_ASSETS = [
 
   // Config
   "./js/config/audioConfig.js",
+  "./js/config/seoConfig.js",
+  "./js/config/landingContent.js",
+  "./js/config/structuredData.js",
+
+  // Landing Page
+  "./js/landing/app.js",
+  "./js/landing/seo.js",
+  "./js/landing/navigation.js",
+  "./js/landing/hero.js",
+  "./js/landing/features.js",
+  "./js/landing/sounds.js",
+  "./js/landing/effects.js",
+  "./js/landing/footer.js",
+  "./js/landing/animations.js",
 
   // Audio Engine
   "./js/audio/audioEngine.js",
@@ -104,6 +118,10 @@ const STATIC_ASSETS = [
 
   // Constants
   "./js/constants/themes.js",
+  "./js/constants/landing.js",
+
+  // Stylesheets
+  "./css/landing.css",
 
   // Assets
   "./img/BeatForge Studio.png",
@@ -173,11 +191,7 @@ self.addEventListener("fetch", (event) => {
       return fetch(fetchRequest)
         .then((response) => {
           // Check if valid response
-          if (
-            !response ||
-            response.status !== 200 ||
-            response.type !== "basic"
-          ) {
+          if (!response || response.status !== 200 || response.type !== "basic") {
             return response;
           }
 
@@ -214,9 +228,7 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "CLEAR_CACHE") {
     event.waitUntil(
       caches.keys().then((cacheNames) => {
-        return Promise.all(
-          cacheNames.map((cacheName) => caches.delete(cacheName))
-        );
+        return Promise.all(cacheNames.map((cacheName) => caches.delete(cacheName)));
       })
     );
   }
