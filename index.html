@@ -3,8 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- SEO Meta Tags -->
     <meta name="description"
@@ -125,6 +124,29 @@
 </head>
 
 <body class="h-screen flex flex-col">
+
+    <!-- Skip to Main Content Link (Accessibility) -->
+    <a href="#sequencerArea" class="skip-link" id="skipLink">
+        Skip to main content
+    </a>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" role="status" aria-live="polite" aria-label="Loading application">
+        <div class="loading-content">
+            <div class="loading-spinner" aria-hidden="true"></div>
+            <p class="loading-text">Initializing BeatForge Studio...</p>
+            <p class="loading-subtext">Preparing audio engine</p>
+        </div>
+    </div>
+
+    <!-- Offline Status Indicator -->
+    <div id="networkStatus" class="network-status" role="status" aria-live="polite">
+        <i class="fas fa-wifi-slash" aria-hidden="true"></i>
+        <span>Offline Mode</span>
+    </div>
+
+    <!-- ARIA Live Region for Dynamic Announcements -->
+    <div id="ariaAnnouncer" class="sr-only" aria-live="assertive" aria-atomic="true"></div>
 
     <!-- HEADER / TRANSPORT -->
     <header class="header-container bg-neutral-900 border-b border-gray-800 shrink-0 z-20" role="banner">
@@ -534,7 +556,18 @@
     </div>
 
     <!-- JAVASCRIPT -->
-    <script type="module" src="js/app.js?v=1.0.2"></script>
+    <script type="module" src="js/app.js?v=1.0.3"></script>
+
+    <!-- Failsafe: Hide loading overlay if it persists beyond 5 seconds -->
+    <script>
+        setTimeout(function () {
+            var overlay = document.getElementById('loadingOverlay');
+            if (overlay && !overlay.classList.contains('hidden')) {
+                overlay.classList.add('hidden');
+                console.warn('[Failsafe] Loading overlay hidden after timeout');
+            }
+        }, 5000);
+    </script>
 </body>
 
 </html>

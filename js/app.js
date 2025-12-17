@@ -12,22 +12,13 @@ import {
   hasRecording,
   exportRecording,
 } from "./audio/audioEngine.js";
-import {
-  loadState,
-  getState,
-  getTracks,
-  clearState,
-} from "./state/stateManager.js";
+import { loadState, getState, getTracks, clearState } from "./state/stateManager.js";
 import { startScheduler } from "./scheduler/scheduler.js";
 import { drawVisualizer, initVisualizerMode } from "./ui/visualizer.js";
 import { updatePatternSelector } from "./ui/patternManager.js";
 import { renderTracksUI } from "./ui/trackRenderer.js";
 import { openPianoRoll, closePianoRoll } from "./ui/pianoRoll.js";
-import {
-  setupEventListeners,
-  showShortcuts,
-  closeShortcuts,
-} from "./ui/eventHandlers.js";
+import { setupEventListeners, showShortcuts, closeShortcuts } from "./ui/eventHandlers.js";
 import { initScrollSync } from "./ui/scrollSync.js";
 import { initMobileMenu } from "./ui/mobileMenu.js";
 
@@ -42,11 +33,22 @@ import { Logger } from "./utils/logger.js";
 import { initErrorBoundary } from "./utils/errorBoundary.js";
 
 // Import configuration
+import { getConfig, getEnvironment, setEnvironment } from "./config/audioConfig.js";
+
+// Import accessibility utilities
 import {
-  getConfig,
-  getEnvironment,
-  setEnvironment,
-} from "./config/audioConfig.js";
+  initAccessibility,
+  hideLoadingOverlay,
+  updateLoadingText,
+  announce,
+  announceTransport,
+} from "./utils/accessibility.js";
+
+// Import confirmation modal
+import { showConfirm } from "./utils/confirmModal.js";
+
+// Import input validation
+import { initInputValidation } from "./utils/inputValidation.js";
 
 /**
  * Initialize configuration based on environment
@@ -125,9 +127,7 @@ async function exportProject() {
     // Check if audio is initialized
     const audioCtx = getAudioContext();
     if (!audioCtx) {
-      alert(
-        'Please initialize audio first by clicking the "Initialize Audio" button.'
-      );
+      alert('Please initialize audio first by clicking the "Initialize Audio" button.');
       return;
     }
 
@@ -136,12 +136,8 @@ async function exportProject() {
     const tracks = getTracks();
 
     // Check if there's anything to export
-    const hasDrumNotes = tracks.some(
-      (t) => t.type === "drum" && t.steps.some((s) => s)
-    );
-    const hasSynthNotes = tracks.some(
-      (t) => t.type === "synth" && t.notes.length > 0
-    );
+    const hasDrumNotes = tracks.some((t) => t.type === "drum" && t.steps.some((s) => s));
+    const hasSynthNotes = tracks.some((t) => t.type === "synth" && t.notes.length > 0);
 
     if (!hasDrumNotes && !hasSynthNotes) {
       alert("No notes to export! Please add some notes to your pattern first.");
@@ -151,8 +147,7 @@ async function exportProject() {
     // Show progress message
     const exportBtn = document.getElementById("exportBtn");
     const originalText = exportBtn.innerHTML;
-    exportBtn.innerHTML =
-      '<i class="fas fa-spinner fa-spin mr-1"></i><span>Exporting...</span>';
+    exportBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i><span>Exporting...</span>';
     exportBtn.disabled = true;
 
     Logger.info("Starting project export");
@@ -162,14 +157,9 @@ async function exportProject() {
       // Export the recorded audio
       await exportRecording(`music-studio-recording-${Date.now()}.webm`);
       if (window.toast) {
-        window.toast.success(
-          "Export Complete",
-          "Your recording has been downloaded successfully!"
-        );
+        window.toast.success("Export Complete", "Your recording has been downloaded successfully!");
       } else {
-        alert(
-          "Recording exported successfully! Your audio file has been downloaded."
-        );
+        alert("Recording exported successfully! Your audio file has been downloaded.");
       }
       Logger.info("Recording exported successfully");
     } else {
@@ -181,9 +171,7 @@ async function exportProject() {
           "Your audio file has been downloaded successfully!"
         );
       } else {
-        alert(
-          "Export completed successfully! Your audio file has been downloaded."
-        );
+        alert("Export completed successfully! Your audio file has been downloaded.");
       }
       Logger.info("Project exported to WAV successfully");
     }
@@ -192,17 +180,9 @@ async function exportProject() {
     exportBtn.innerHTML = originalText;
     exportBtn.disabled = false;
   } catch (error) {
-    Logger.error(
-      Logger.ERROR_CODES.EXPORT_FAILED,
-      `Export failed: ${error.message}`,
-      {},
-      error
-    );
+    Logger.error(Logger.ERROR_CODES.EXPORT_FAILED, `Export failed: ${error.message}`, {}, error);
     if (window.toast) {
-      window.toast.error(
-        "Export Failed",
-        error.message || "An error occurred during export"
-      );
+      window.toast.error("Export Failed", error.message || "An error occurred during export");
     } else {
       alert("Export failed: " + error.message);
     }
@@ -210,8 +190,7 @@ async function exportProject() {
     // Restore button
     const exportBtn = document.getElementById("exportBtn");
     if (exportBtn) {
-      exportBtn.innerHTML =
-        '<i class="fas fa-download mr-1"></i><span>Export</span>';
+      exportBtn.innerHTML = '<i class="fas fa-download mr-1"></i><span>Export</span>';
       exportBtn.disabled = false;
     }
   }
@@ -219,15 +198,27 @@ async function exportProject() {
 
 /**
  * Clear all data and reset to default
+ * Uses custom confirmation modal instead of native confirm()
  */
-function clearAllData() {
-  const cleared = clearState();
-  if (cleared) {
-    renderUI();
-    if (window.toast) {
-      window.toast.warning("Data Cleared", "All tracks have been reset");
+async function clearAllData() {
+  const confirmed = await showConfirm({
+    title: "Clear All Data",
+    message:
+      "Are you sure you want to clear all tracks and reset to default? This action cannot be undone.",
+    confirmText: "Clear All",
+    cancelText: "Cancel",
+    danger: true,
+  });
+
+  if (confirmed) {
+    const cleared = clearState();
+    if (cleared) {
+      renderUI();
+      if (window.toast) {
+        window.toast.warning("Data Cleared", "All tracks have been reset");
+      }
+      Logger.info("All data cleared and reset");
     }
-    Logger.info("All data cleared and reset");
   }
 }
 
@@ -303,6 +294,9 @@ const BeatForge = {
 
 // --- INITIALIZATION ---
 document.addEventListener("DOMContentLoaded", () => {
+  // Initialize accessibility features first (shows loading overlay)
+  updateLoadingText("Initializing BeatForge Studio...", "Loading UI components");
+
   // Initialize UI enhancements first
   try {
     initTheme();
@@ -326,12 +320,19 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners(initializeApp, renderUI);
   renderUI();
   initScrollSync();
+
+  // Initialize accessibility (network status, ARIA regions) and hide loading
+  initAccessibility();
+
+  // Initialize input validation
+  initInputValidation();
+
+  // Announce app ready to screen readers
+  announce("BeatForge Studio loaded. Press Tab to navigate controls.");
 });
 
 // Initialize audio button
-document
-  .getElementById("initAudioBtn")
-  .addEventListener("click", initializeApp);
+document.getElementById("initAudioBtn").addEventListener("click", initializeApp);
 
 // --- EXPOSE NAMESPACE TO GLOBAL SCOPE ---
 // Only expose the BeatForge namespace to prevent pollution
