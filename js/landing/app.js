@@ -3,22 +3,22 @@
  * Main orchestrator for the landing page
  */
 
-import { injectSEO } from './seo.js';
-import { renderNavigation, initNavigation } from './navigation.js';
-import { renderHero } from './hero.js';
-import { renderFeatures } from './features.js';
-import { renderSounds } from './sounds.js';
-import { renderEffects } from './effects.js';
-import { renderFooter } from './footer.js';
-import { initScrollAnimations } from './animations.js';
-import { A11Y } from '../constants/landing.js';
+import { injectSEO } from "./seo.js";
+import { renderNavigation, initNavigation } from "./navigation.js";
+import { renderHero } from "./hero.js";
+import { renderFeatures } from "./features.js";
+import { renderSounds } from "./sounds.js";
+import { renderEffects } from "./effects.js";
+import { renderFooter } from "./footer.js";
+import { initScrollAnimations } from "./animations.js";
+import { A11Y } from "../constants/landing.js";
 
 /**
  * Render all landing page components
  */
 function renderComponents() {
   const body = document.body;
-  
+
   // Create main structure
   const html = `
     <!-- Skip Navigation Link for Accessibility -->
@@ -56,8 +56,6 @@ function renderComponents() {
  * Initialize all landing page functionality
  */
 function initLandingPage() {
-  console.log('[Landing] Initializing landing page...');
-
   // Inject SEO meta tags
   injectSEO();
 
@@ -67,14 +65,11 @@ function initLandingPage() {
   // Initialize interactions
   initNavigation();
   initScrollAnimations();
-
-  console.log('[Landing] Landing page initialized successfully');
 }
 
 // Initialize when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initLandingPage);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initLandingPage);
 } else {
   initLandingPage();
 }
-
