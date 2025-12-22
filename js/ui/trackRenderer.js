@@ -2,18 +2,65 @@
  * Track Renderer Module
  * Handles rendering of track UI elements
  * Refactored: Added logging, debouncing, and optimizations
+ * Security: Added XSS protection via HTML sanitization
  */
 
 import { STEP_COUNT } from "../constants.js";
 import { getTracks } from "../state/stateManager.js";
-import {
-  toggleStep,
-  updateTrackParam,
-  toggleMute,
-  toggleSolo,
-} from "./trackControls.js";
+import { toggleStep, updateTrackParam, toggleMute, toggleSolo } from "./trackControls.js";
 import { Logger } from "../utils/logger.js";
 import { debounce, rafDebounce } from "../utils/debounce.js";
+import { sanitizeHTML } from "../utils/sanitize.js";
+
+/**
+ * Add keyboard navigation to step buttons
+ * Allows arrow key navigation and Enter/Space activation
+ */
+function setupStepKeyboardNav(btn, track, stepIndex, toggleCallback, renderCallback) {
+  btn.addEventListener("keydown", (e) => {
+    const row = btn.closest(".track-row, .mobile-sequencer-section");
+    if (!row) return;
+
+    const buttons = Array.from(row.querySelectorAll(".step-btn, .mobile-step-btn"));
+    const currentIndex = buttons.indexOf(btn);
+
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        if (currentIndex < buttons.length - 1) {
+          buttons[currentIndex + 1].focus();
+        }
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        if (currentIndex > 0) {
+          buttons[currentIndex - 1].focus();
+        }
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        toggleCallback(track.id, stepIndex);
+        if (renderCallback) renderCallback();
+        // Announce change to screen readers
+        const isActive = track.type === "drum" ? track.steps[stepIndex] : false;
+        if (window.announce) {
+          window.announce(
+            `${track.name}, step ${stepIndex + 1} ${isActive ? "deactivated" : "activated"}`
+          );
+        }
+        break;
+      case "Home":
+        e.preventDefault();
+        buttons[0]?.focus();
+        break;
+      case "End":
+        e.preventDefault();
+        buttons[buttons.length - 1]?.focus();
+        break;
+    }
+  });
+}
 
 let isInitialRender = true;
 
@@ -37,18 +84,11 @@ function highlightTrackHeader(trackId) {
 
     // Remove previous highlights
     headers.forEach((h) => {
-      h.classList.remove(
-        "ring-2",
-        "ring-blue-500",
-        "ring-offset-2",
-        "ring-offset-gray-900"
-      );
+      h.classList.remove("ring-2", "ring-blue-500", "ring-offset-2", "ring-offset-gray-900");
     });
 
     // Add highlight to selected track
-    const targetHeader = headerContainer.querySelector(
-      `[data-track-id="${trackId}"]`
-    );
+    const targetHeader = headerContainer.querySelector(`[data-track-id="${trackId}"]`);
     if (targetHeader) {
       targetHeader.classList.add(
         "ring-2",
@@ -135,12 +175,7 @@ function renderTracksUI(openPianoRollCallback) {
       Logger.debug("Switched to mobile track layout");
     } else {
       // Desktop: Separate track headers and sequencer grid
-      renderDesktopTracks(
-        tracks,
-        headerContainer,
-        gridContainer,
-        openPianoRollCallback
-      );
+      renderDesktopTracks(tracks, headerContainer, gridContainer, openPianoRollCallback);
       gridContainer.style.display = "block";
       Logger.debug("Switched to desktop track layout");
     }
@@ -159,16 +194,9 @@ function renderTracksUI(openPianoRollCallback) {
 /**
  * Render desktop tracks (original layout) with optimizations
  */
-function renderDesktopTracks(
-  tracks,
-  headerContainer,
-  gridContainer,
-  openPianoRollCallback
-) {
+function renderDesktopTracks(tracks, headerContainer, gridContainer, openPianoRollCallback) {
   try {
-    Logger.debug(
-      `Rendering ${tracks.length} desktop track headers and sequencer grid`
-    );
+    Logger.debug(`Rendering ${tracks.length} desktop track headers and sequencer grid`);
     let renderedCount = 0;
 
     tracks.forEach((track, trackIndex) => {
@@ -186,26 +214,22 @@ function renderDesktopTracks(
       // Update classes
       hDiv.className = `track-header-item border-b border-gray-800 p-3 flex flex-col justify-between bg-gradient-to-r from-[#1a1a1a] to-[#222] relative`;
       if (track.solo) hDiv.classList.add("border-l-4", "border-yellow-400");
-      else
-        hDiv.classList.add("border-l-4", track.color.replace("bg-", "border-"));
+      else hDiv.classList.add("border-l-4", track.color.replace("bg-", "border-"));
 
       // Only update innerHTML if creating new element or if we need to force update
       if (needsCreate || !hDiv.hasAttribute("data-rendered")) {
+        // SECURITY FIX: Sanitize track name to prevent XSS attacks
+        const safeName = sanitizeHTML(track.name);
+
         hDiv.innerHTML = `
                 <div class="flex justify-between items-center mb-2">
-                    <span class="font-bold text-sm truncate flex-1 mr-2">${
-                      track.name
-                    }</span>
+                    <span class="font-bold text-sm truncate flex-1 mr-2">${safeName}</span>
                     <div class="flex gap-1 flex-shrink-0">
                         <button class="mute-btn text-xs w-6 h-6 rounded ${
-                          track.mute
-                            ? "bg-red-600 text-white"
-                            : "bg-gray-700 text-gray-400"
+                          track.mute ? "bg-red-600 text-white" : "bg-gray-700 text-gray-400"
                         }" aria-label="Mute track">M</button>
                         <button class="solo-btn text-xs w-6 h-6 rounded ${
-                          track.solo
-                            ? "bg-yellow-500 text-black"
-                            : "bg-gray-700 text-gray-400"
+                          track.solo ? "bg-yellow-500 text-black" : "bg-gray-700 text-gray-400"
                         }" aria-label="Solo track">S</button>
                     </div>
                 </div>
@@ -319,9 +343,7 @@ function renderDesktopTracks(
         }
         if (soloBtn) {
           soloBtn.className = `solo-btn text-xs w-6 h-6 rounded ${
-            track.solo
-              ? "bg-yellow-500 text-black"
-              : "bg-gray-700 text-gray-400"
+            track.solo ? "bg-yellow-500 text-black" : "bg-gray-700 text-gray-400"
           }`;
         }
       }
@@ -360,21 +382,40 @@ function renderDesktopTracks(
 
         if (track.type === "drum") {
           let btn = cell.querySelector(".step-btn");
+          const isActive = track.steps[i];
           if (!btn) {
             btn = document.createElement("button");
             btn.onclick = (e) => {
               e.stopPropagation(); // Prevent row click
               toggleStep(track.id, i);
               highlightTrackHeader(track.id);
+              // Announce change to screen readers
+              if (window.announce) {
+                window.announce(
+                  `${track.name}, step ${i + 1} ${track.steps[i] ? "activated" : "deactivated"}`
+                );
+              }
               // Re-render after toggle
               renderTracksUI(openPianoRollCallback);
             };
-            btn.setAttribute("aria-label", `Step ${i + 1}`);
             cell.innerHTML = "";
             cell.appendChild(btn);
+            // Add keyboard navigation
+            setupStepKeyboardNav(btn, track, i, toggleStep, () =>
+              renderTracksUI(openPianoRollCallback)
+            );
           }
+
+          // Enhanced ARIA attributes
+          btn.setAttribute(
+            "aria-label",
+            `${sanitizeHTML(track.name)}, Step ${i + 1}${isActive ? ", active" : ""}`
+          );
+          btn.setAttribute("aria-pressed", isActive ? "true" : "false");
+          btn.setAttribute("role", "switch");
+
           btn.className = `step-btn w-10 h-10 md:w-12 md:h-12 rounded-sm transition-all ${
-            track.steps[i] ? track.color : "bg-gray-800"
+            isActive ? track.color : "bg-gray-800"
           }`;
 
           // Add step number label
@@ -386,8 +427,11 @@ function renderDesktopTracks(
             btn.appendChild(stepLabel);
           }
         } else {
+          // Synth track cells - make them keyboard accessible
           const notesHere = track.notes.filter((n) => n.step === i);
-          if (notesHere.length > 0) {
+          const hasNotes = notesHere.length > 0;
+
+          if (hasNotes) {
             cell.innerHTML = `<div class="${
               track.color
             } w-full h-5 md:h-6 rounded-sm text-[9px] md:text-[10px] flex items-center justify-center text-white font-bold shadow-lg opacity-90 relative">
@@ -397,16 +441,30 @@ function renderDesktopTracks(
           } else {
             cell.innerHTML = `<span class="step-number">${i + 1}</span>`;
           }
+
           cell.onclick = (e) => {
             e.stopPropagation(); // Prevent row click
             highlightTrackHeader(track.id);
             openPianoRollCallback(track.id);
           };
-          cell.style.cursor = "pointer";
+
+          // Make cell keyboard accessible
+          cell.setAttribute("tabindex", "0");
+          cell.setAttribute("role", "button");
           cell.setAttribute(
             "aria-label",
-            `Step ${i + 1} - Click to edit notes`
+            `${sanitizeHTML(track.name)}, Step ${i + 1}${hasNotes ? `, note ${notesHere[0].note}` : ""} - Press Enter to edit`
           );
+          cell.style.cursor = "pointer";
+
+          // Add keyboard handler for Enter/Space
+          cell.onkeydown = (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              highlightTrackHeader(track.id);
+              openPianoRollCallback(track.id);
+            }
+          };
         }
       }
     });
@@ -436,10 +494,7 @@ function renderMobileTracks(tracks, headerContainer, openPianoRollCallback) {
       // Create track row container
       const trackRow = document.createElement("div");
       trackRow.dataset.trackId = track.id;
-      trackRow.className = `mobile-track-row ${track.color.replace(
-        "bg-",
-        "border-l-"
-      )}`;
+      trackRow.className = `mobile-track-row ${track.color.replace("bg-", "border-l-")}`;
       if (track.solo) trackRow.classList.add("border-l-yellow-400");
 
       // Track header section (left side)
@@ -467,27 +522,40 @@ function renderMobileTracks(tracks, headerContainer, openPianoRollCallback) {
       const sequencerSection = document.createElement("div");
       sequencerSection.className = "mobile-sequencer-section";
 
-      // Create step buttons
+      // Create step buttons with enhanced accessibility
       for (let i = 0; i < STEP_COUNT; i++) {
         const stepBtn = document.createElement("button");
-        stepBtn.className = `mobile-step-btn ${
-          track.type === "drum" && track.steps[i] ? track.color : ""
-        }`;
+        const isDrum = track.type === "drum";
+        const isActive = isDrum && track.steps[i];
+
+        stepBtn.className = `mobile-step-btn ${isActive ? track.color : ""}`;
         stepBtn.dataset.trackId = track.id;
         stepBtn.dataset.step = i;
         stepBtn.dataset.stepNumber = i + 1;
-        stepBtn.setAttribute("aria-label", `Step ${i + 1}`);
 
         // For synth tracks, check if there are notes
-        const notesHere =
-          track.type === "synth" ? track.notes.filter((n) => n.step === i) : [];
+        const notesHere = track.type === "synth" ? track.notes.filter((n) => n.step === i) : [];
         const hasNote = notesHere.length > 0;
+
+        // Enhanced ARIA attributes
+        if (isDrum) {
+          stepBtn.setAttribute(
+            "aria-label",
+            `${sanitizeHTML(track.name)}, Step ${i + 1}${isActive ? ", active" : ""}`
+          );
+          stepBtn.setAttribute("aria-pressed", isActive ? "true" : "false");
+          stepBtn.setAttribute("role", "switch");
+        } else {
+          stepBtn.setAttribute(
+            "aria-label",
+            `${sanitizeHTML(track.name)}, Step ${i + 1}${hasNote ? `, note ${notesHere[0].note}` : ""}`
+          );
+          stepBtn.setAttribute("role", "button");
+        }
 
         // Add step number label
         const stepLabel = document.createElement("span");
-        stepLabel.className = hasNote
-          ? "step-number step-number-with-note"
-          : "step-number";
+        stepLabel.className = hasNote ? "step-number step-number-with-note" : "step-number";
         stepLabel.textContent = i + 1;
         stepBtn.appendChild(stepLabel);
 
@@ -499,6 +567,11 @@ function renderMobileTracks(tracks, headerContainer, openPianoRollCallback) {
           noteIndicator.textContent = notesHere[0].note;
           stepBtn.appendChild(noteIndicator);
         }
+
+        // Add keyboard navigation for mobile (supports Bluetooth keyboards)
+        setupStepKeyboardNav(stepBtn, track, i, toggleStep, () =>
+          renderTracksUI(openPianoRollCallback)
+        );
 
         sequencerSection.appendChild(stepBtn);
       }
@@ -579,9 +652,7 @@ window.addEventListener("resize", () => {
       lastViewMode = currentViewMode;
       isInitialRender = true; // Force full re-render
       // Re-render will be triggered by the app's render cycle
-      Logger.debug(
-        `View mode changed to: ${currentViewMode ? "mobile" : "desktop"}`
-      );
+      Logger.debug(`View mode changed to: ${currentViewMode ? "mobile" : "desktop"}`);
     }
   }, 250);
 });

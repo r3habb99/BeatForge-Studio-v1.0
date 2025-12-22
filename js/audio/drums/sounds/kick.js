@@ -1,12 +1,14 @@
 /**
  * Kick Drum Sound Generator
  * Generates kick drum sounds using oscillator synthesis
+ * PERFORMANCE FIX: Added automatic audio node cleanup to prevent memory leaks
  */
 
 import { getAudioContext } from '../../audioContext.js';
 import { connectTrackOutput } from '../../routing.js';
 import { connectOfflineTrackOutput } from '../../export/offline-routing.js';
 import { safeTime } from '../../utils/time-helpers.js';
+import { createCleanOscillator, createCleanGain } from '../../utils/nodeCleanup.js';
 
 /**
  * Play kick drum sound
@@ -16,18 +18,23 @@ import { safeTime } from '../../utils/time-helpers.js';
  */
 export function playKick(track, time, vol) {
     const audioCtx = getAudioContext();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+    const duration = 0.5;
+
+    // PERFORMANCE FIX: Use cleanup-aware node creation
+    const osc = createCleanOscillator(audioCtx, duration);
+    const gain = createCleanGain(audioCtx, duration);
 
     osc.frequency.setValueAtTime(150, time);
-    osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+    osc.frequency.exponentialRampToValueAtTime(0.01, time + duration);
     gain.gain.setValueAtTime(vol, time);
-    gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+    gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
 
     osc.connect(gain);
     connectTrackOutput(track, gain);
     osc.start(time);
-    osc.stop(time + 0.5);
+    osc.stop(time + duration);
+
+    // Nodes will be automatically cleaned up via onended callback
 }
 
 /**

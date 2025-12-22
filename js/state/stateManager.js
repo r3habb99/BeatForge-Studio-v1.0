@@ -2,6 +2,7 @@
  * State Management Module
  * Handles application state, storage, and state-related operations
  * Improved with validation, structuredClone, and extracted configuration
+ * PRODUCTION FIX: Added storage quota management
  */
 
 import { Validators, ValidationResult } from "../utils/validators.js";
@@ -13,6 +14,8 @@ import {
   TRACK_COLORS,
 } from "../config/audioConfig.js";
 import { STEP_COUNT } from "../constants.js";
+import { warnIfStorageFull } from "../utils/storageQuota.js";
+import { toast } from "../utils/toast.js";
 
 /**
  * Deep clone using structuredClone or JSON fallback
@@ -349,9 +352,13 @@ function getState() {
 
 /**
  * Save state to localStorage with validation
+ * PRODUCTION FIX: Added storage quota checking
  */
-function saveState() {
+async function saveState() {
   try {
+    // PRODUCTION FIX: Check storage quota before saving
+    await warnIfStorageFull(80);
+
     const data = {
       patterns: state.patterns,
       currentPattern: state.currentPattern,
@@ -374,17 +381,32 @@ function saveState() {
       patterns: data.patterns.length,
     });
   } catch (error) {
-    Logger.error(
-      Logger.ERROR_CODES.STATE_SAVE_FAILED,
-      `Failed to save state: ${error.message}`,
-      {},
-      error
-    );
+    // Handle QuotaExceededError specifically
+    if (error.name === 'QuotaExceededError') {
+      Logger.error(
+        Logger.ERROR_CODES.STORAGE_ERROR,
+        'Storage quota exceeded',
+        {},
+        error
+      );
+      toast.error(
+        'Storage Full',
+        'Cannot save. Please export your projects and clear old data.'
+      );
+    } else {
+      Logger.error(
+        Logger.ERROR_CODES.STATE_SAVE_FAILED,
+        `Failed to save state: ${error.message}`,
+        {},
+        error
+      );
+    }
   }
 }
 
 /**
  * Load state from localStorage with error handling
+ * SECURITY FIX: Added prototype pollution protection
  */
 function loadState() {
   try {
@@ -394,7 +416,28 @@ function loadState() {
       return;
     }
 
-    const data = JSON.parse(saved);
+    // SECURITY: Parse with reviver to prevent prototype pollution attacks
+    const data = JSON.parse(saved, (key, value) => {
+      // Block dangerous property names that could pollute prototypes
+      if (key === "__proto__" || key === "constructor" || key === "prototype") {
+        Logger.warn(
+          Logger.WARNING_CODES.VALIDATION_WARNING,
+          `Blocked dangerous property in saved state: ${key}`
+        );
+        return undefined;
+      }
+      return value;
+    });
+
+    // Validate data structure before using
+    if (!data || typeof data !== "object") {
+      Logger.error(
+        Logger.ERROR_CODES.INVALID_STATE,
+        "Invalid saved state structure"
+      );
+      localStorage.removeItem(STATE_CONFIG.STORAGE_KEY);
+      return;
+    }
 
     // Validate and set BPM
     if (data.bpm !== undefined) {
